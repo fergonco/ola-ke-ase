@@ -1,0 +1,71 @@
+* optimizar acceso a tarea a partir del nombre
+* optimizar el arrastrado de tareas
+* renombrar
+* guardar
+
+* añadir tarea
+	* hacer que el div contenedor ocupe toda la pantalla
+	* hacer que se pueda scrollar el gantt mediante drags del ratón
+	* que las teclas cursor no muevan el scroll
+	* implementar una selección
+	* implementar:
+		* ENTER para crear un hermano abajo
+		* SHIFT-ENTER para crear un hermano arriba
+		* DEL para eliminar la tarea seleccionada
+		* F2 para editar el nombre
+
+* filtrar por hoy
+* filtrar por status
+
+* mostrar árbol de subtareas
+* añadir subtarea
+* eliminar subtarea
+
+* refactor atemporalTasks update with normal tasks update
+
+* deshabilitar scrolling: http://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily#4770179 (rehabilitar scrolling a selección)
+
+* fix minitask: don't allow a task with same name
+
+* contador en subtarea: mostrar contador (exclusivo) actual, arrancar, parar
+
+	* start/stop timer
+	* mostrar indicador en el padre cuando un descendiente tiene contador activado.
+	* when a timer starts all other stop
+	* mostrar el timer en movimiento
+	* Reporte diario de horas
+
+* Poder meter texto plano en un nodo
+
+* mostrar qué hijos pertenecen al grupo abierto
+* Editar nodo fuera del svg. Borrar comentario debe quitar el icono.
+* Ctrl + T para añadir un registro de tiempo
+* Mostrar los nodos que tienen tareas atemporales.
+* que los botones no se queden el foco
+* Filtrar la suma de tiempos por día o por período (instalar dos marcadores móviles).
+
+* Orden de dibujado
+* Al eliminar seleccionar el siguiente o el anterior si no hay siguiente.
+* No marcar hijos atemporales en tareas atemporales
+* nuevo hijo en atemporal se ralla al dibujar (parece que toma el margen de los grupos)
+* Cuando se inserta una tarea sin shift y es la primera el flag de atemporal debería ponerse a false
+
+* Intentar cambiar de zoom a día y tratar de planificar el día así
+capa atemporal con contador pierde contador si se le dan hijos
+Posibilidad de "archivar" tarea. Ya no se trabaja en ella pero se computa su tiempo.
+
+Obtener sumas de tiempo en función del intervalo temporal seleccionado.
+tamaño del fondo de la tarea atemporal
+Cuando se añade una capa no se edita su nombre
+
+Deshacer
+Añadir rallado horizontal
+set root?
+expandir o recoger completamente un nodo
+background del texto no funciona
+
+
+estimar subtareas y mostrar estimación en tarea
+mostrar tiempo consumido respecto al 100% estimación
+marcar tarea como terminada
+mostrar suma tiempo estimado de subtareas completadas

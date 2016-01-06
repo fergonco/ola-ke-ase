@@ -1,0 +1,11 @@
+refresh-tree: Signal that the tree should be refreshed
+data-ready: task-tree has refreshed it's structures and can be accessed safely
+gantt-created: the gantt base is already in DOM
+
+
+* tasks: children
+* startDate: time when the temporally referenced task starts. if null, it is today. if the task is in a minitask collection is one day later than the parent
+* endDate: time when the temporally referenced task ends. if null, it is end of today. if the task is in a minitask collection is one day later than the parent
+* status: Task type. If it has tasks, it is "gruppe". By default "short".
+* atemporal-children: Children has no temporal reference (sub tasks)
+
