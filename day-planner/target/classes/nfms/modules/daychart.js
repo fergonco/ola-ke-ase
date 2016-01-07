@@ -1,5 +1,7 @@
 define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, utils) {
 
+	var interval = [ utils.today.getTime(), utils.today.getTime() + utils.DAY_MILLIS ];
+
 	var xScale, yScale;
 
 	var toHour = function(date) {
@@ -35,7 +37,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			return d;
 		});
 	}
-	
+
 	d3.select("body").append("div")//
 	.attr("class", "button")//
 	.html("Guardar").on("click", function() {
@@ -50,7 +52,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	.attr("width", width)//
 	.attr("height", height);
 
-	bus.listen("data-ready", function() {
+	var refreshChart = function() {
 		xScale = d3.scale.linear().domain([ 0, 100 ]).range([ 50, width - 50 ]);
 		yScale = d3.scale.linear().domain([ 0, 24 ]).range([ 0, height ]);
 
@@ -75,15 +77,13 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		var taskNames = [];
 		taskTree.visitTasks(taskTree.ROOT,
 				function(task) {
-					var interval = [ utils.today,
-							new Date(utils.today.getTime() + utils.DAY_MILLIS) ];
 					var endDateInRange = task.getEndDate() > interval[0]
 							&& task.getEndDate() < interval[1];
 					var startDateInRange = task.getStartDate() > interval[0]
 							&& task.getStartDate() < interval[1];
 					var rangeInTask = task.getStartDate() <= interval[0]
 							&& task.getEndDate() >= interval[1];
-					return !task.isGroup() && (endDateInRange || startDateInRange || rangeInTask);
+					return !task.isGroup() && !task.isAtemporal() && (endDateInRange || startDateInRange || rangeInTask);
 				}, taskTree.VISIT_ALL_CHILDREN, function(task) {
 					taskNames.push(task.taskName);
 				});
@@ -164,5 +164,18 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		var yAxis = d3.svg.axis().scale(yScale).orient("right").tickSize(1);
 		svg.append("g").attr("class", "y axis").call(yAxis);
 
+	};
+
+	bus.listen("data-ready", refreshChart);
+
+	bus.listen("day+", function() {
+		interval[0] += utils.DAY_MILLIS;
+		interval[1] += utils.DAY_MILLIS;
+		refreshChart();
+	});
+	bus.listen("day-", function() {
+		interval[0] -= utils.DAY_MILLIS;
+		interval[1] -= utils.DAY_MILLIS;
+		refreshChart();
 	});
 });
