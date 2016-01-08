@@ -110,8 +110,10 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			dy = 0;
 			sourceY = yScale(task.dayStart);
 			setter = function(value) {
-				task.dayEnd = value + task.dayEnd - task.dayStart;
-				task.dayStart = value;
+				if (value >= 0 && value + task.dayEnd - task.dayStart <= 24) {
+					task.dayEnd = value + task.dayEnd - task.dayStart;
+					task.dayStart = value;
+				}
 			};
 			if (d3.event.sourceEvent.shiftKey) {
 				var mouseY = d3.mouse(this)[1];
@@ -119,12 +121,16 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 				var endDistance = Math.abs(mouseY - yScale(task.dayEnd));
 				if (startDistance < endDistance) {
 					setter = function(value) {
-						task.dayStart = value;
+						if (value < task.dayEnd) {
+							task.dayStart = value;
+						}
 					};
 				} else {
 					sourceY = yScale(task.dayEnd);
 					setter = function(value) {
-						task.dayEnd = value;
+						if (value > task.dayStart) {
+							task.dayEnd = value;
+						}
 					};
 				}
 			}
