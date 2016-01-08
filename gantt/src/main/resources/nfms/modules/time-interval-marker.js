@@ -2,14 +2,6 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 
 	var interval = null;
 
-	var FILTER = function(task) {
-		var endDateInRange = task.getEndDate() > interval[0] && task.getEndDate() < interval[1];
-		var startDateInRange = task.getStartDate() > interval[0]
-				&& task.getStartDate() < interval[1];
-		var rangeInTask = task.getStartDate() <= interval[0] && task.getEndDate() >= interval[1];
-		return task.isGroup() || (endDateInRange || startDateInRange || rangeInTask);
-	};
-
 	var updateTimeMarker = function(timeMarkerSelection) {
 		timeMarkerSelection.attr("class", "timeMarker")//
 		.attr("d", function(d) {
@@ -69,11 +61,9 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 	bus.listen("deactivate-filter", function() {
 		interval = null;
 		refreshTimeMarkers();
-		bus.send("filter", [ null ]);
 	});
 	bus.listen("activate-filter", function(e, min, max) {
 		interval = [ min, max ];
 		refreshTimeMarkers();
-		bus.send("filter", [ FILTER ]);
 	});
 });

@@ -1,7 +1,7 @@
 define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, utils) {
 
 	var interval = [ utils.today.getTime(), utils.today.getTime() + utils.DAY_MILLIS ];
-
+	var filterActivated = false;
 	var xScale, yScale;
 
 	var toHour = function(date) {
@@ -74,24 +74,11 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		});
 
 		// Data preparation
-		var taskNames = [];
-		taskTree.visitTasks(taskTree.ROOT,
-				function(task) {
-					var endDateInRange = task.getEndDate() > interval[0]
-							&& task.getEndDate() < interval[1];
-					var startDateInRange = task.getStartDate() > interval[0]
-							&& task.getStartDate() < interval[1];
-					var rangeInTask = task.getStartDate() <= interval[0]
-							&& task.getEndDate() >= interval[1];
-					return !task.isGroup() && !task.isAtemporal() && (endDateInRange || startDateInRange || rangeInTask);
-				}, taskTree.VISIT_ALL_CHILDREN, function(task) {
-					taskNames.push(task.taskName);
-				});
+		var taskNames = taskTree.getTaskNames();
 		for (var i = 0; i < taskNames.length; i++) {
 			var task = taskTree.getTask(taskNames[i]);
 			if (!task.hasOwnProperty("dayStart")) {
 				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
-				console.log(taskLength);
 				if (taskLength != utils.DAY_MILLIS) {
 					task["dayStart"] = toHour(task.getStartDate());
 					task["dayEnd"] = toHour(task.getEndDate());
@@ -166,16 +153,23 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 
 	};
 
-	bus.listen("data-ready", refreshChart);
+	bus.listen("data-ready", function() {
+		if (filterActivated) {
+			refreshChart();
+		} else {
+			filterActivated = true;
+			bus.send("activate-filter", interval);
+		}
+	});
 
 	bus.listen("day+", function() {
 		interval[0] += utils.DAY_MILLIS;
 		interval[1] += utils.DAY_MILLIS;
-		refreshChart();
+		bus.send("activate-filter", interval);
 	});
 	bus.listen("day-", function() {
 		interval[0] -= utils.DAY_MILLIS;
 		interval[1] -= utils.DAY_MILLIS;
-		refreshChart();
+		bus.send("activate-filter", interval);
 	});
 });
