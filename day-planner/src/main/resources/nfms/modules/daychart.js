@@ -100,6 +100,10 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 						task["dayEnd"] = i + 1;
 						task["plannedInDay"] = false;
 					}
+				} else {
+					if (!task.hasOwnProperty("plannedInDay")) {
+						task["plannedInDay"] = true;
+					}
 				}
 			}
 			var taskNames = taskNames.filter(filter);
