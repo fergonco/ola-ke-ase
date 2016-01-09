@@ -15,7 +15,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}
 
 	var updateTask = function(taskSelection) {
-		taskSelection.attr("class", "task")//
+		taskSelection//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
 			if (task.plannedInDay) {
@@ -38,7 +38,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}
 
 	var updateText = function(taskTextSelection) {
-		taskTextSelection.attr("class", "task-text")//
+		taskTextSelection//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
 			if (task.plannedInDay) {
@@ -95,15 +95,17 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			taskNames = taskNames.filter(filter);
 
 			// Task rects
-			var taskSelection = svg.selectAll(".task " + classPrefix).data(taskNames);
+			var taskClass = "task-" + classPrefix;
+			var taskSelection = svg.selectAll("." + taskClass).data(taskNames);
 			taskSelection.exit().remove();
-			taskSelection.enter().append("rect");
+			taskSelection.enter().append("rect").attr("class", "task " + taskClass);
 			updateTask(taskSelection);
 
 			// Task texts
-			var taskTextSelection = svg.selectAll(".task-text " + classPrefix).data(taskNames);
+			taskClass = "task-text-" + classPrefix;
+			var taskTextSelection = svg.selectAll("." + taskClass).data(taskNames);
 			taskTextSelection.exit().remove();
-			taskTextSelection.enter().append("text");
+			taskTextSelection.enter().append("text").attr("class", taskClass);
 			updateText(taskTextSelection);
 
 			// d&d
