@@ -24,10 +24,15 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		var margin = 3;
 		selectedTasksJoin.attr("class", "taskSelection")//
 		.attr("x", function(d) {
-			return xScale(1);
+			var task = taskTree.getTask(d);
+			if (task.plannedInDay) {
+				return xScale(1);
+			} else {
+				return xScale(51);
+			}
 		})//
 		.attr("width", function(d) {
-			return xScale(99);
+			return xScale(49);
 		})//
 		.attr("y", function(d, i) {
 			var task = taskTree.getTask(d);

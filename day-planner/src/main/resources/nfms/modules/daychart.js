@@ -17,10 +17,15 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	var updateTask = function(taskSelection) {
 		taskSelection.attr("class", "task")//
 		.attr("x", function(d) {
-			return xScale(5);
+			var task = taskTree.getTask(d);
+			if (task.plannedInDay) {
+				return xScale(5);
+			} else {
+				return xScale(55);
+			}
 		})//
 		.attr("width", function(d) {
-			return xScale(90);
+			return xScale(40);
 		})//
 		.attr("y", function(d, i) {
 			var task = taskTree.getTask(d);
@@ -34,7 +39,14 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 
 	var updateText = function(taskTextSelection) {
 		taskTextSelection.attr("class", "task-text")//
-		.attr("x", xScale(12))//
+		.attr("x", function(d) {
+			var task = taskTree.getTask(d);
+			if (task.plannedInDay) {
+				return xScale(8);
+			} else {
+				return xScale(58);
+			}
+		})//
 		.attr("y", function(d) {
 			var task = taskTree.getTask(d);
 			return yScale(task.dayStart + 0.4);
@@ -50,21 +62,13 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		bus.send("save");
 	});
 
-	var chart = function(taskSelection, width, height) {
+	var chart = function(classPrefix, taskSelection, width, height, xSplit) {
 		var filter = taskSelection;
-		d3.select("body").append("div").attr("class", "allscreen");
-		var svg = d3.select(".allscreen").append("svg")//
-		.attr("class", "chart")//
-		.attr("width", width)//
-		.attr("height", height)//
-		.attr("transform", "translate(20, 20)");
-
-		svg.append("g").attr("class", "y axis");
 
 		var refresh = function() {
 			xScale = d3.scale.linear().domain([ 0, 100 ]).range([ 0, width ]);
 			yScale = d3.scale.linear().domain([ 0, 24 ]).range([ 0, height ]);
-			bus.send("new-scales", [xScale, yScale]);
+			bus.send("new-scales", [ xScale, yScale ]);
 			var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1);
 			d3.select(".y").call(yAxis).selectAll("text")//
 			.attr("dy", "1.5em");
@@ -91,13 +95,13 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			taskNames = taskNames.filter(filter);
 
 			// Task rects
-			var taskSelection = svg.selectAll(".task").data(taskNames);
+			var taskSelection = svg.selectAll(".task " + classPrefix).data(taskNames);
 			taskSelection.exit().remove();
 			taskSelection.enter().append("rect");
 			updateTask(taskSelection);
 
 			// Task texts
-			var taskTextSelection = svg.selectAll(".task-text").data(taskNames);
+			var taskTextSelection = svg.selectAll(".task-text " + classPrefix).data(taskNames);
 			taskTextSelection.exit().remove();
 			taskTextSelection.enter().append("text");
 			updateText(taskTextSelection);
@@ -146,7 +150,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 				}
 				setter(newTime);
 
-				var inPlanned = d3.mouse(this)[0] < 800;
+				var inPlanned = d3.mouse(this)[0] < xSplit;
 				if (task.plannedInDay != inPlanned) {
 					task.plannedInDay = inPlanned;
 					refreshBoth();
@@ -172,14 +176,25 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		}
 	}
 
-	chartPlanned = chart(function(taskName) {
+	var width = 1600;
+	var height = 1000;
+	d3.select("body").append("div").attr("class", "allscreen");
+	var svg = d3.select(".allscreen").append("svg")//
+	.attr("class", "chart")//
+	.attr("width", width)//
+	.attr("height", height)//
+	.attr("transform", "translate(20, 20)");
+
+	svg.append("g").attr("class", "y axis");
+
+	chartPlanned = chart("left", function(taskName) {
 		var task = taskTree.getTask(taskName);
 		return task.plannedInDay;
-	}, 800, 1000);
-	chartUnplanned = chart(function(taskName) {
+	}, width, height, width / 2);
+	chartUnplanned = chart("right", function(taskName) {
 		var task = taskTree.getTask(taskName);
 		return !task.plannedInDay;
-	}, 800, 1000);
+	}, width, height, width / 2);
 
 	bus.listen("data-ready", function() {
 		if (filterActivated) {
