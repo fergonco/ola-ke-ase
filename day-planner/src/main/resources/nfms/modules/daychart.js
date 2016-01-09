@@ -52,7 +52,12 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			return yScale(task.dayStart + 0.4);
 		}) //
 		.html(function(d) {
-			return d;
+			var ret = d;
+			var timeSum = taskTree.getTask(d).getTimeRecordSum();
+			if (timeSum > 0) {
+				ret += ": " + utils.formatTime(timeSum);
+			}
+			return ret;
 		});
 	}
 
@@ -64,6 +69,17 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 
 	var chart = function(classPrefix, taskSelection, width, height, xSplit) {
 		var filter = taskSelection;
+		var taskClass = "task-" + classPrefix;
+		var taskTextClass = "task-text-" + classPrefix;
+
+		var refreshTask = function(taskName) {
+			updateTask(d3.selectAll("." + taskClass).filter(function(d) {
+				return d == taskName;
+			}));
+			updateText(d3.selectAll("." + taskTextClass).filter(function(d) {
+				return d == taskName;
+			}));
+		}
 
 		var refresh = function() {
 			xScale = d3.scale.linear().domain([ 0, 100 ]).range([ 0, width ]);
@@ -95,17 +111,15 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			taskNames = taskNames.filter(filter);
 
 			// Task rects
-			var taskClass = "task-" + classPrefix;
 			var taskSelection = svg.selectAll("." + taskClass).data(taskNames);
 			taskSelection.exit().remove();
 			taskSelection.enter().append("rect").attr("class", "task " + taskClass);
 			updateTask(taskSelection);
 
 			// Task texts
-			taskClass = "task-text-" + classPrefix;
-			var taskTextSelection = svg.selectAll("." + taskClass).data(taskNames);
+			var taskTextSelection = svg.selectAll("." + taskTextClass).data(taskNames);
 			taskTextSelection.exit().remove();
-			taskTextSelection.enter().append("text").attr("class", taskClass);
+			taskTextSelection.enter().append("text").attr("class", taskTextClass);
 			updateText(taskTextSelection);
 
 			// d&d
@@ -160,7 +174,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 					updateTask(d3.selectAll(".task").filter(function(d2) {
 						return d2 == d;
 					}));
-					updateText(d3.selectAll(".task-text").filter(function(d2) {
+					updateText(d3.selectAll("." + taskTextClass).filter(function(d2) {
 						return d2 == d;
 					}));
 				}
@@ -174,7 +188,8 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		};
 
 		return {
-			"refresh" : refresh
+			"refresh" : refresh,
+			"refreshTask" : refreshTask
 		}
 	}
 
@@ -228,11 +243,17 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		}
 	});
 
+	bus.listen("refresh-task", function(e, taskName) {
+		chartPlanned.refreshTask(taskName);
+		chartUnplanned.refreshTask(taskName);
+	});
+
 	bus.listen("day+", function() {
 		interval[0] += utils.DAY_MILLIS;
 		interval[1] += utils.DAY_MILLIS;
 		bus.send("activate-filter", interval);
 	});
+
 	bus.listen("day-", function() {
 		interval[0] -= utils.DAY_MILLIS;
 		interval[1] -= utils.DAY_MILLIS;
