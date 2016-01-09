@@ -71,6 +71,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 				}
 			}
 			selectedTask = taskNames[selectedIndex];
+			bus.send("task-selected", selectedTask);
 			updateSelection();
 		}
 	});
@@ -84,6 +85,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		taskNames.sort(function(a, b) {
 			return taskTree.getTask(a).dayStart - taskTree.getTask(b).dayStart;
 		});
+		updateSelection();
 	});
 
 });
