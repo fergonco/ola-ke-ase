@@ -1,0 +1,25 @@
+{
+  "$schema": "http://olakease.org/task-schema",
+  "id": "http://olakease.org/task-schema",
+  "type": "object",
+  "properties": {
+    "taskName": {
+      "id": "http://olakease.org/taskName",
+      "title" : "Name: ",
+      "type": "string"
+    },
+    "dailyDuration": {
+      "id": "http://olakease.org/dailyDuration",
+      "title" : "Duration: ",
+      "type": "integer"
+    },
+    "content": {
+      "id": "http://olakease.org/content",
+      "title" : "Multiline: ",
+      "type": "string",
+      "ui-annotations" : {
+        "multiline" : true
+      }
+    }
+  }
+}
