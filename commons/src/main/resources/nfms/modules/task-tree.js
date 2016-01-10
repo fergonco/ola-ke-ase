@@ -1,4 +1,4 @@
-define([ "message-bus", "utils", "d3"], function(bus, utils) {
+define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	var nameIndicesMap = {};
 	var timeDomain = null;
@@ -284,61 +284,54 @@ define([ "message-bus", "utils", "d3"], function(bus, utils) {
 			tasks.splice(taskIndex, 1);
 		}
 		task["startTimeRecord"] = function(time) {
-			if (task.isAtemporal()) {
-				if (!task.hasOwnProperty("timeRecords")) {
-					task["timeRecords"] = [];
-				}
-				task["timeRecords"].push({
-					"start" : time
-				});
+			if (!task.hasOwnProperty("timeRecords")) {
+				task["timeRecords"] = [];
 			}
+			task["timeRecords"].push({
+				"start" : time
+			});
 		}
 		task["stopTimeRecord"] = function(time) {
-			if (task.isAtemporal()) {
-				if (task.hasOwnProperty("timeRecords")) {
-					var last = task.timeRecords[task.timeRecords.length - 1];
-					if (!last.hasOwnProperty("end")) {
-						last["end"] = time;
-					}
+			if (task.hasOwnProperty("timeRecords")) {
+				var last = task.timeRecords[task.timeRecords.length - 1];
+				if (!last.hasOwnProperty("end")) {
+					last["end"] = time;
 				}
 			}
 		}
 		task["hasOpenTimeRecord"] = function(time) {
-			if (task.isAtemporal()) {
-				if (task.hasOwnProperty("timeRecords")) {
-					var last = task.timeRecords[task.timeRecords.length - 1];
-					return !last.hasOwnProperty("end");
-				}
+			if (task.hasOwnProperty("timeRecords")) {
+				var last = task.timeRecords[task.timeRecords.length - 1];
+				return !last.hasOwnProperty("end");
 			}
 			return false;
 		}
 		task["getTimeRecordSum"] = function(min, max) {
+			if (!min) {
+				min = 0;
+			}
+			if (!max) {
+				max = Number.MAX_VALUE;
+			}
 			var acum = 0;
+			if (task.hasOwnProperty("timeRecords")) {
+				for (var i = 0; i < task.timeRecords.length; i++) {
+					var record = task.timeRecords[i];
+					var end;
+					if (record.hasOwnProperty("end")) {
+						end = Math.min(max, record.end);
+					} else {
+						end = new Date().getTime();
+					}
+					var start = Math.max(min, record.start);
+					acum = acum + end - start;
+				}
+			}
 			if (task.hasChildren()) {
 				for (var i = 0; i < task.tasks.length; i++) {
 					acum += task.tasks[i].getTimeRecordSum();
 				}
-			} else if (task.isAtemporal()) {
-				if (task.hasOwnProperty("timeRecords")) {
-					if (!min) {
-						min = 0;
-					}
-					if (!max) {
-						max = Number.MAX_VALUE;
-					}
 
-					for (var i = 0; i < task.timeRecords.length; i++) {
-						var record = task.timeRecords[i];
-						var end;
-						if (record.hasOwnProperty("end")) {
-							end = Math.min(max, record.end);
-						} else {
-							end = new Date().getTime();
-						}
-						var start = Math.max(min, record.start);
-						acum = acum + end - start;
-					}
-				}
 			}
 			return acum;
 		}
