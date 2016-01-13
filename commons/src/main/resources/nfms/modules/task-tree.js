@@ -344,6 +344,31 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			return 5;
 		}
+		task["setDayFinished"] = function(finished, day) {
+			var dayList;
+			if (task.hasOwnProperty("dayFinished")) {
+				dayList = task["dayFinished"];
+			} else {
+				dayList = [];
+				task["dayFinished"] = dayList;
+			}
+			if (finished) {
+				dayList.push(day);
+			} else {
+				var index = dayList.indexOf(day);
+				if (index != -1) {
+					dayList.splice(index, 1);
+				}
+			}
+		}
+		task["isDayFinished"] = function(day) {
+			if (task.hasOwnProperty("dayFinished")) {
+				var dayList = task["dayFinished"];
+				return dayList.indexOf(day) != -1;
+			}
+
+			return false;
+		}
 		task["getContent"] = function() {
 			if (task.hasOwnProperty("content")) {
 				return task.content;

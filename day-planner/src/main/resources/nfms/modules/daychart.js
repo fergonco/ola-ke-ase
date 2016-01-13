@@ -34,6 +34,9 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		.attr("height", function(d) {
 			var task = taskTree.getTask(d);
 			return yScale(task.dayEnd) - yScale(task.dayStart);
+		}).classed("finished", function(d) {
+			var task = taskTree.getTask(d);
+			return task.isDayFinished(interval[0]);
 		});
 	}
 
@@ -58,6 +61,9 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 				ret += ": " + utils.formatTime(timeSum);
 			}
 			return ret;
+		}).classed("finished", function(d) {
+			var task = taskTree.getTask(d);
+			return task.isDayFinished(interval[0]);
 		});
 	}
 
