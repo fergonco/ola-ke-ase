@@ -5,7 +5,7 @@ define([ "message-bus", "task-tree" ], function(bus, taskTree) {
 	var timerId;
 
 	bus.listen("keypress", function(e, d3Event) {
-		if (d3Event.keyCode == 84 && selectedTask != null) {
+		if (d3Event.keyCode == 84 && !d3Event.ctrlKey && selectedTask != null) {
 			var task = taskTree.getTask(selectedTask);
 			window.clearInterval(timerId);
 			if (task.hasOpenTimeRecord()) {
