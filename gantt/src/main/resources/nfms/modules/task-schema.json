@@ -1,25 +1,57 @@
 {
-  "$schema": "http://olakease.org/task-schema",
-  "id": "http://olakease.org/task-schema",
-  "type": "object",
-  "properties": {
-    "taskName": {
-      "id": "http://olakease.org/taskName",
-      "title" : "Name: ",
-      "type": "string"
-    },
-    "dailyDuration": {
-      "id": "http://olakease.org/dailyDuration",
-      "title" : "Duration: ",
-      "type": "integer"
-    },
-    "content": {
-      "id": "http://olakease.org/content",
-      "title" : "Multiline: ",
-      "type": "string",
-      "ui-annotations" : {
-        "multiline" : true
-      }
-    }
-  }
-}
+	"$schema" : "http://olakease.org/task-schema",
+	"id" : "http://olakease.org/task-schema",
+	"type" : "object",
+	"properties" : {
+		"taskName" : {
+			"id" : "http://olakease.org/taskName",
+			"title" : "Name: ",
+			"type" : "string"
+		},
+		"dailyDuration" : {
+			"id" : "http://olakease.org/dailyDuration",
+			"title" : "Duration: ",
+			"type" : "integer"
+		},
+		"content" : {
+			"id" : "http://olakease.org/content",
+			"title" : "Multiline: ",
+			"type" : "string",
+			"ui-annotations" : {
+				"multiline" : true
+			}
+		},
+		"timeRecords" : {
+			"id" : "http://olakease.org/timeRecords",
+			"title" : "Time records: ",
+			"type" : "array",
+			"items" : {
+				"id" : "http://olakease.org/timeRecord",
+				"title" : "Time record: ",
+				"type" : "object",
+				"properties" : {
+					"start" : {
+						"id" : "http://olakease.org/timeRecord#start",
+						"title" : "Start: ",
+						"type" : "integer",
+						"ui-annotations" : {
+							"showAs" : "date"
+						}
+					},
+					"end" : {
+						"id" : "http://olakease.org/timeRecord#end",
+						"title" : "End: ",
+						"type" : "integer",
+						"ui-annotations" : {
+							"showAs" : "date"
+						}
+					}
+				}
+			},
+			"ui-annotations" : {
+				"customRender" : "time-records",
+				"customParser" : "time-records"
+			}
+		}
+	}
+} 
