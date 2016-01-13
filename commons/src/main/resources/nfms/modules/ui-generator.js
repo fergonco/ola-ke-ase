@@ -72,6 +72,12 @@ define([ "d3" ], function(utils) {
 					updater = function() {
 						object[d] = parseInt(input.value);
 					};
+				} else if (type == "float") {
+					input = document.createElement("input");
+					input.value = toFormString(object[d]);
+					updater = function() {
+						object[d] = parseFloat(input.value);
+					};
 				} else if (type == "string") {
 					if (annotations && annotations["multiline"]) {
 						input = document.createElement("textArea");
