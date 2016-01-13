@@ -1,5 +1,8 @@
 define([ "d3" ], function(utils) {
 
+	var customRender = {};
+	var customParser = {};
+
 	var toFormString = function(value) {
 		if (typeof value == 'undefined') {
 			return "";
@@ -8,6 +11,14 @@ define([ "d3" ], function(utils) {
 		} else {
 			return value;
 		}
+	}
+
+	var setCustomRender = function(name, newRender) {
+		customRender[name] = newRender;
+	}
+
+	var setCustomParser = function(name, newParser) {
+		customParser[name] = newParser;
 	}
 
 	var populate = function(containerId, elementClass, schema, originalObject) {
@@ -22,7 +33,8 @@ define([ "d3" ], function(utils) {
 				propertyNames.push(name);
 				var value = null;
 				var getterName = "get" + name.charAt(0).toUpperCase() + name.substr(1);
-				if (originalObject.hasOwnProperty(getterName) && typeof originalObject[getterName] === "function") {
+				if (originalObject.hasOwnProperty(getterName)
+						&& typeof originalObject[getterName] === "function") {
 					value = originalObject[getterName]();
 				} else {
 					value = originalObject[name];
@@ -44,9 +56,22 @@ define([ "d3" ], function(utils) {
 			divSelection.append("span").html(property.title);
 			divSelection.append(function() {
 				var input = null;
-				if (type == "integer") {
+				var updater = null;
+
+				if (annotations && annotations["customRender"]) {
+					input = document.createElement("textArea");
+					input.rows = 15;
+					input.cols = 80;
+					input.value = customRender[annotations["customRender"]](object[d]);
+					updater = function() {
+						object[d] = customParser[annotations["customParser"]](input.value);
+					};
+				} else if (type == "integer") {
 					input = document.createElement("input");
 					input.value = toFormString(object[d]);
+					updater = function() {
+						object[d] = parseInt(input.value);
+					};
 				} else if (type == "string") {
 					if (annotations && annotations["multiline"]) {
 						input = document.createElement("textArea");
@@ -57,10 +82,11 @@ define([ "d3" ], function(utils) {
 						input = document.createElement("input");
 						input.value = toFormString(object[d]);
 					}
+					updater = function() {
+						object[d] = input.value;
+					};
 				}
-				updaters.push(function() {
-					object[d] = input.value;
-				});
+				updaters.push(updater);
 				if (input != null) {
 					d3.select(input).on("keydown", function() {
 						// IE fix
@@ -122,6 +148,8 @@ define([ "d3" ], function(utils) {
 	}
 
 	return {
-		"populate" : populate
+		"populate" : populate,
+		"setCustomParser" : setCustomParser,
+		"setCustomRender" : setCustomRender
 	}
 });
