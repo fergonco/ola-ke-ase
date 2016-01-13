@@ -337,12 +337,12 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		task["getDailyDuration"] = function() {
 			if (task.hasOwnProperty("dailyDuration")) {
-				var ret = task["dailyDuration"];
+				var ret = parseFloat(task["dailyDuration"]);
 				if (ret > 0) {
 					return ret;
 				}
 			}
-			return 5;
+			return task.isGroup() ? 0 : 5;
 		}
 		task["setDayFinished"] = function(finished, day) {
 			var dayList;

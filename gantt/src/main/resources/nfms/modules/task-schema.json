@@ -11,7 +11,7 @@
 		"dailyDuration" : {
 			"id" : "http://olakease.org/dailyDuration",
 			"title" : "Duration: ",
-			"type" : "integer"
+			"type" : "float"
 		},
 		"content" : {
 			"id" : "http://olakease.org/content",
