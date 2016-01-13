@@ -171,9 +171,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var dayX = function(d) {
 			return xScale(d);
 		};
-		var dayY = function(d) {
-			return 0;
-		};
 		var dayHeight = function(d) {
 			return height - margin.top - margin.bottom;
 		};
@@ -181,7 +178,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var weekendSelection = level1.selectAll(".weekend").data(saturdays);
 		weekendSelection.exit().remove();
 		weekendSelection.enter().insert("rect", ":first-child");
-		weekendSelection.attr("class", "weekend").attr("x", dayX).attr("y", dayY).attr("width",
+		weekendSelection.attr("class", "weekend").attr("x", dayX).attr("y", 0).attr("width",
 				function(d) {
 					return xScale(new Date(d.getTime() + 2 * utils.DAY_MILLIS)) - xScale(d);
 				}).attr("height", dayHeight);
@@ -323,7 +320,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var todaySelection = level2.selectAll(".today").data([ utils.today ]);
 		todaySelection.exit().remove();
 		todaySelection.enter().insert("rect", ":first-child");
-		todaySelection.attr("class", "today").attr("x", dayX).attr("y", dayY).attr("width",
+		todaySelection.attr("class", "today").attr("x", dayX).attr("y", 0).attr("width",
 				function(d) {
 					return xScale(new Date(d.getTime() + utils.DAY_MILLIS)) - xScale(d);
 				}).attr("height", dayHeight);
