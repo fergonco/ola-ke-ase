@@ -49,7 +49,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 		})//
 		.attr("y", function(d) {
 			var task = taskTree.getTask(d);
-			return yScale(task.dayStart + 0.4);
+			return yScale(task.dayStart) + 15;
 		}) //
 		.html(function(d) {
 			var ret = d;
@@ -194,7 +194,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}
 
 	var width = 1600;
-	var height = 1000;
+	var height = 2000;
 	d3.select("body").append("div").attr("class", "allscreen");
 	var svg = d3.select(".allscreen").append("svg")//
 	.attr("class", "chart")//
@@ -226,7 +226,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 						task["plannedInDay"] = true;
 					} else {
 						task["dayStart"] = i;
-						task["dayEnd"] = i + 1;
+						task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
 						task["plannedInDay"] = false;
 					}
 				} else {

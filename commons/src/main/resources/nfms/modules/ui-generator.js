@@ -20,7 +20,14 @@ define([ "d3" ], function(utils) {
 		for ( var name in schema.properties) {
 			if (schema.properties.hasOwnProperty(name)) {
 				propertyNames.push(name);
-				object[name] = originalObject[name];
+				var value = null;
+				var getterName = "get" + name.charAt(0).toUpperCase() + name.substr(1);
+				if (originalObject.hasOwnProperty(getterName) && typeof originalObject[getterName] === "function") {
+					value = originalObject[getterName]();
+				} else {
+					value = originalObject[name];
+				}
+				object[name] = value;
 			}
 		}
 

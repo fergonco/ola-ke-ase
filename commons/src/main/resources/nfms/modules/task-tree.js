@@ -335,6 +335,15 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			return acum;
 		}
+		task["getDailyDuration"] = function() {
+			if (task.hasOwnProperty("dailyDuration")) {
+				var ret = task["dailyDuration"];
+				if (ret > 0) {
+					return ret;
+				}
+			}
+			return 5;
+		}
 		task["getContent"] = function() {
 			if (task.hasOwnProperty("content")) {
 				return task.content;
