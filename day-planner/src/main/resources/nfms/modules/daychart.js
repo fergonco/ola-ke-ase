@@ -200,7 +200,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}
 
 	var width = 1600;
-	var height = 2000;
+	var height = 1500;
 	d3.select("body").append("div").attr("class", "allscreen");
 	var svg = d3.select(".allscreen").append("svg")//
 	.attr("class", "chart")//
