@@ -34,8 +34,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		loadSelection.enter().append("rect");
 		var dayWidthPixels = xScale(new Date(timeDomain[0].getTime() + utils.DAY_MILLIS))
 				- xScale(timeDomain[0]);
-		var colors = [ "f", "e", "d", "c", "b", "a", "9", "8", "7", "6", "5", "4", "3", "2", "1",
-				"0" ];
+		var colors = [ "f", "f", "f", "f", "f", "f", "f", "a", "a", "a", "a", "7", "7", "7", "3", "3" ];
 		loadSelection.attr("class", "load")//
 		.attr("x", function(d, index) {
 			return xScale(timeDomain[0].getTime() + index * utils.DAY_MILLIS);
@@ -51,6 +50,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				var color = colors[d];
 				return "#" + color + color + color;
 			}
+		}).on("click", function(d){
+			console.log(d);
 		});
 
 	});
