@@ -10,7 +10,6 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	var xScale;
 	var yScale;
 	var taskNames;
-	var atemporalTaskNames;
 	var statusList;
 
 	var ROOT = {
@@ -25,10 +24,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		return false;
 	};
 	var FILTER_SINGLE_TASKS = function(task) {
-		return !task.isGroup() && !task.isAtemporal();
-	};
-	var FILTER_ATEMPORAL = function(task) {
-		return task.isAtemporal();
+		return !task.isGroup();
 	};
 
 	var FILTER_WITH_DATE = function(task) {
@@ -143,17 +139,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		task["getParent"] = function() {
 			return parent;
 		}
-		task["isAtemporal"] = function() {
-			if (task.getParent() == null) {
-				return false;
-			} else {
-				return task.getParent()["atemporal-children"] || task.getParent().isAtemporal();
-			}
-		}
 		task["isGroup"] = function() {
-			return task.hasChildren() && !task["atemporal-children"];
-		}
-		task["hasChildren"] = function() {
 			return task.hasOwnProperty("tasks") && task.tasks.length > 0;
 		}
 		task["isFolded"] = function() {
@@ -169,10 +155,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 		}
 		task["getStartDate"] = function() {
-			if (task.isAtemporal()) {
-				var parentDate = task.getParent().getStartDate();
-				return new Date(parentDate.getTime() + utils.DAY_MILLIS);
-			} else if (!task.isGroup()) {
+			if (!task.isGroup()) {
 				if (task.hasOwnProperty("startDate")) {
 					return new Date(task["startDate"]);
 				} else {
@@ -183,10 +166,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 		};
 		task["getEndDate"] = function() {
-			if (task.isAtemporal()) {
-				var parentDate = task.getParent().getEndDate();
-				return new Date(parentDate.getTime() + utils.DAY_MILLIS);
-			} else if (!task.isGroup()) {
+			if (!task.isGroup()) {
 				if (task.hasOwnProperty("endDate")) {
 					return new Date(task["endDate"]);
 				} else {
@@ -218,30 +198,23 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			parentTask.tasks.splice(index, 0, newTask);
 			return newTask.taskName;
 		}
-		task["createChild"] = function(atemporal) {
+		task["createChild"] = function() {
 			var newTask = {
 				taskName : getNewName()
 			};
 			if (task.hasOwnProperty("status")) {
 				newTask["status"] = task.status;
 			}
-			atemporal = task.isAtemporal() || (atemporal && !task.isGroup());
-			if (!atemporal) {
-				if (task.getStartDate() != null) {
-					newTask.startDate = task.getStartDate();
-				}
-				if (task.getEndDate() != null) {
-					newTask.endDate = task.getEndDate();
-				}
-				task["atemporal-children"] = false;
+			if (task.getStartDate() != null) {
+				newTask.startDate = task.getStartDate();
 			}
-			if (atemporal) {
-				task["atemporal-children"] = true;
+			if (task.getEndDate() != null) {
+				newTask.endDate = task.getEndDate();
 			}
 			return createChild(task, newTask);
 		}
 		task["removeChild"] = function(child) {
-			if (task.hasChildren()) {
+			if (task.isGroup()) {
 				for (var i = 0; i < task.tasks.length; i++) {
 					if (task.tasks[i] == child) {
 						task.tasks.splice(i, 1);
@@ -327,7 +300,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 					acum = acum + end - start;
 				}
 			}
-			if (task.hasChildren()) {
+			if (task.isGroup()) {
 				for (var i = 0; i < task.tasks.length; i++) {
 					acum += task.tasks[i].getTimeRecordSum();
 				}
@@ -412,12 +385,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN
 				: VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
-		var atemporalTaskFilter = userChildrenFilter != null ? FILTER_NONE : FILTER_ATEMPORAL;
 		visitTasks(ROOT, FILTER_ALL, childrenFilter, function(task, index) {
 			nameIndicesMap[task.taskName] = index;
 		});
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);
-		atemporalTaskNames = visitTasks(ROOT, atemporalTaskFilter, childrenFilter, NAME_EXTRACTOR);
 
 		var dayCount = (timeDomain[1].getTime() - timeDomain[0].getTime()) / utils.DAY_MILLIS;
 		var daySize = scaleType == "week" ? 30 : 400;
@@ -491,9 +462,6 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		},
 		"getTaskNames" : function() {
 			return taskNames;
-		},
-		"getAtemporalTaskNames" : function() {
-			return atemporalTaskNames;
 		},
 		"getXScale" : function() {
 			return xScale;

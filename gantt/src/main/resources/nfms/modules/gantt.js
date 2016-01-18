@@ -7,7 +7,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 
 	var timeDomain;
 	var taskNames;
-	var atemporalTaskNames;
 	var xScale;
 	var yScale;
 	var statusList;
@@ -67,9 +66,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		.attr("class", function(d) {
 			var task = taskTree.getTask(d);
 			var barClass;
-			if (task.isAtemporal()) {
-				barClass = "atemporal";
-			} else if (task.isGroup() && task.isFolded()) {
+			if (task.isGroup() && task.isFolded()) {
 				barClass = "gruppe-closed";
 			} else {
 				barClass = task.getStatus();
@@ -93,10 +90,10 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				return; // click suppressed
 			var task = taskTree.getTask(d);
 			bus.send("select-task", [ d ]);
-			if (task.hasChildren()) {
+			if (task.isGroup()) {
 				bus.send("toggle-folded-selected");
 			}
-			if (d3.event.ctrlKey && (!task.isGroup() || !task.isAtemporal())) {
+			if (d3.event.ctrlKey && !task.isGroup()) {
 				var statusList = taskTree.getStatusList();
 				var taskStatus = task.getStatus();
 				for (var i = 0; i < statusList.length; i++) {
@@ -108,30 +105,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				}
 			}
 		});
-	};
-
-	var updateAtemporalTask = function(selection) {
-		selection//
-		.attr("title", function(d) {
-			return d;
-		})//
-		.attr("class", "atemporal-tasks") //
-		.attr(
-				"transform",
-				function(d) {
-					var dates = taskTree.getTask(d).getPresentationTimeDomain();
-					return "translate(" + xScale(dates[0]) + ","
-							+ (yScale(d) + yScale.rangeBand() - 3) + ")";
-				})//
-		.html(function(d) {
-			var ret = "᛫ " + d;
-			var timeSum = taskTree.getTask(d).getTimeRecordSum();
-			if (timeSum > 0) {
-				ret += ": " + utils.formatTime(timeSum);
-			}
-			return ret;
-		});
-
 	};
 
 	var updateTaskHandlers = function(selection) {
@@ -157,7 +130,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	bus.listen("data-ready", function() {
 		timeDomain = taskTree.getTimeDomain();
 		taskNames = taskTree.getTaskNames();
-		atemporalTaskNames = taskTree.getAtemporalTaskNames();
 		xScale = taskTree.getXScale();
 		yScale = taskTree.getYScale();
 		var yRange = yScale.range();
@@ -201,13 +173,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		taskSelection.enter().append("rect");
 
 		updateTask(taskSelection);
-
-		// Atemporal tasks texts
-		var atemporalTaskSelection = level3.selectAll(".atemporal-tasks").data(atemporalTaskNames);
-		atemporalTaskSelection.exit().remove();
-		atemporalTaskSelection.enter().append("text");
-
-		updateAtemporalTask(atemporalTaskSelection);
 
 		// drag&drop tasks
 		var sourceX;
@@ -259,7 +224,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var x = xScale(dates[0]);
 			var y1 = yScale(d);
 			var t = task;
-			while (t.hasChildren() && !t.isFolded()) {
+			while (t.isGroup() && !t.isFolded()) {
 				t = t.tasks[t.tasks.length - 1];
 			}
 			var y2 = yScale(t.taskName) + yScale.rangeBand();
@@ -270,7 +235,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var taskDates = [];
 		for (var i = 0; i < taskNames.length; i++) {
 			var task = taskTree.getTask(taskNames[i]);
-			if (!task.isAtemporal() && !task.isGroup()) {
+			if (!task.isGroup()) {
 				taskDates.push({
 					"taskName" : taskNames[i],
 					"dateIndex" : 0
@@ -388,15 +353,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 
 	bus.listen("refresh-task", function(e, taskName) {
 		var task = taskTree.getTask(taskName);
-		if (task.isAtemporal()) {
-			updateAtemporalTask(d3.selectAll(".atemporal-tasks").filter(function(d) {
-				return d == taskName;
-			}));
-		} else {
-			updateTask(d3.selectAll(".task").filter(function(d) {
-				return d == taskName;
-			}));
-		}
+		updateTask(d3.selectAll(".task").filter(function(d) {
+			return d == taskName;
+		}));
 	});
 
 });
