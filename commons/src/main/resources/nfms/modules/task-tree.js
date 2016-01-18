@@ -273,7 +273,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 		}
 		task["hasOpenTimeRecord"] = function(time) {
-			if (task.hasOwnProperty("timeRecords")) {
+			if (task.hasOwnProperty("timeRecords") && task.timeRecords.length > 0) {
 				var last = task.timeRecords[task.timeRecords.length - 1];
 				return !last.hasOwnProperty("end");
 			}
