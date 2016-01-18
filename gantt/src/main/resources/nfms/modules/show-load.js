@@ -29,7 +29,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				}
 			}
 		}
-		console.log(loadData);
 		var loadSelection = d3.select("#level4").selectAll(".load").data(loadData);
 		loadSelection.exit().remove();
 		loadSelection.enter().append("rect");
@@ -45,13 +44,13 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		.attr("width", dayWidthPixels)//
 		.attr("height", yScale.rangeBand() / 2)//
 		.style("fill", function(d) {
+			d = Math.round(d);
 			if (d >= colors.length) {
 				return "red";
 			} else {
-				var color = colors[Math.round(d)];
+				var color = colors[d];
 				return "#" + color + color + color;
 			}
-			return "blue";
 		});
 
 	});
