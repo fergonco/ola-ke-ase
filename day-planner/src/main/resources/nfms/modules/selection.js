@@ -71,7 +71,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 				}
 			}
 			selectedTask = taskNames[selectedIndex];
-			bus.send("task-selected", selectedTask);
+			bus.send("selection-update", selectedTask);
 			updateSelection();
 		}
 	});

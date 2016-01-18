@@ -11,7 +11,7 @@ define([ "message-bus", "task-tree" ], function(bus, taskTree) {
 		}
 	});
 
-	bus.listen("task-selected", function(e, task) {
+	bus.listen("selection-update", function(e, task) {
 		selectedTask = task
 	});
 

@@ -12,7 +12,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		}
 	});
 
-	bus.listen("task-selected", function(e, task) {
+	bus.listen("selection-update", function(e, task) {
 		selectedTask = task
 	});
 });
