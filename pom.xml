@@ -33,5 +33,13 @@
 			</plugin>
 		</plugins>
 	</build>
-
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.fao.unredd</groupId>
+				<artifactId>core</artifactId>
+				<version>4.0.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>
