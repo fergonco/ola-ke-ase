@@ -28,14 +28,14 @@ public class WebsocketHandler {
 
 	@OnMessage
 	public void incoming(String message) {
-		broadcastReload();
+		broadcastReload(message);
 	}
 
-	private void broadcastReload() {
+	private void broadcastReload(String message) {
 		for (WebsocketHandler handler : handlers) {
 			try {
 				synchronized (handler) {
-					handler.session.getBasicRemote().sendText("refresh!");
+					handler.session.getBasicRemote().sendText(message);
 				}
 			} catch (IOException e) {
 				handlers.remove(handler);

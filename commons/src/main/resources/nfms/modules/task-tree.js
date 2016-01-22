@@ -440,13 +440,20 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			data : JSON.stringify(ROOT.tasks),
 			success : function(data, textStatus, jqXHR) {
 				bus.send("info", "Guardado");
+				bus.send("websocket-send", "saved");
 			},
 			errorMsg : "No se salvó",
 			complete : function() {
 				bus.send("hide-wait-mask");
 			}
 		});
+	});
 
+	bus.listen("websocket-receive", function(e, data) {
+		require([ "text!plan?a=" + new Date().getTime() ], function(newPlan) {
+			ROOT.tasks = JSON.parse(newPlan);
+			bus.send("refresh-tree");
+		});
 	});
 
 	return {
