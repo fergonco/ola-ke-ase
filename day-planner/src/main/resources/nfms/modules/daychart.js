@@ -262,12 +262,12 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 	bus.listen("day+", function() {
 		interval[0] += utils.DAY_MILLIS;
 		interval[1] += utils.DAY_MILLIS;
-		bus.send("activate-filter", interval);
+		bus.send("refresh-tree");
 	});
 
 	bus.listen("day-", function() {
 		interval[0] -= utils.DAY_MILLIS;
 		interval[1] -= utils.DAY_MILLIS;
-		bus.send("activate-filter", interval);
+		bus.send("refresh-tree");
 	});
 });
