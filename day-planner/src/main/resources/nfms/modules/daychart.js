@@ -199,7 +199,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			taskSelection.call(drag);
 			taskTextSelection.call(drag);
 
-			bus.send("day-planned", [ dayTaskNames ]);
+			bus.send("day-planned", [ dayTaskNames, interval[0] ]);
 		};
 
 		return {
