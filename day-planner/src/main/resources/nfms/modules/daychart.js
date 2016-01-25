@@ -1,9 +1,18 @@
-define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, utils) {
+define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], function(bus, taskTree, utils,
+		timeIntervalFilter) {
 
 	var chartPlanned, chartUnplanned;
 	var interval = [ utils.today.getTime(), utils.today.getTime() + utils.DAY_MILLIS ];
-	var filterActivated = false;
 	var xScale, yScale;
+
+	var getDayTaskNames = function() {
+		var intervalFilter = timeIntervalFilter.createTimeIntervalFilter(function() {
+			return interval;
+		});
+		var taskNames = taskTree.visitTasks(taskTree.ROOT, intervalFilter, taskTree.VISIT_ALL_CHILDREN,
+				taskTree.NAME_EXTRACTOR);
+		return taskNames;
+	}
 
 	var refreshBoth = function() {
 		chartPlanned.refresh();
@@ -113,7 +122,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			});
 
 			// Data preparation
-			var taskNames = taskTree.getTaskNames();
+			var taskNames = getDayTaskNames();
 			taskNames = taskNames.filter(filter);
 
 			// Task rects
@@ -220,8 +229,8 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}, width, height, width / 2);
 
 	bus.listen("data-ready", function() {
-		if (filterActivated) {
-			var taskNames = taskTree.getTaskNames();
+			var taskNames = getDayTaskNames();
+
 			for (var i = 0; i < taskNames.length; i++) {
 				var task = taskTree.getTask(taskNames[i]);
 				if (!task.hasOwnProperty("dayStart")) {
@@ -243,10 +252,6 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			}
 
 			refreshBoth();
-		} else {
-			filterActivated = true;
-			bus.send("activate-filter", interval);
-		}
 	});
 
 	bus.listen("refresh-task", function(e, taskName) {

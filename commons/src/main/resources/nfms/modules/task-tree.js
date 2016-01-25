@@ -385,7 +385,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN
 				: VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
-		visitTasks(ROOT, FILTER_ALL, childrenFilter, function(task, index) {
+		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task, index) {
 			nameIndicesMap[task.taskName] = index;
 		});
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);

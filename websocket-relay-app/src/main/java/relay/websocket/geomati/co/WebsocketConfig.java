@@ -1,4 +1,4 @@
-package websockets.geomati.co;
+package relay.websocket.geomati.co;
 
 import java.util.Collections;
 import java.util.HashSet;

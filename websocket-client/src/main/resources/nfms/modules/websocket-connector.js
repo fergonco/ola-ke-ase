@@ -8,7 +8,7 @@ define([ "message-bus" ], function(bus) {
 		uri = "ws:";
 	}
 	uri += "//" + loc.host;
-	uri += loc.pathname + "/websocket/endpoint";
+	uri += "/websocket-relay/endpoint";
 
 	var socket = new WebSocket(uri);
 	socket.onmessage = function(event) {

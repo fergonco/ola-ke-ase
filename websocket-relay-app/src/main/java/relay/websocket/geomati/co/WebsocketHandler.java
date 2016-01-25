@@ -1,4 +1,4 @@
-package websockets.geomati.co;
+package relay.websocket.geomati.co;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -10,7 +10,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-@ServerEndpoint(value = "/websocket/endpoint")
+@ServerEndpoint(value = "/endpoint")
 public class WebsocketHandler {
 	private static final Set<WebsocketHandler> handlers = new HashSet<WebsocketHandler>();
 	private Session session;

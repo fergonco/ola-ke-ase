@@ -8,8 +8,9 @@
 		<artifactId>olakease</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>websockets</artifactId>
-	<name>websockets</name>
+	<artifactId>websocket-relay-app</artifactId>
+	<name>websocket-relay-app</name>
+	<packaging>war</packaging>
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,6 +28,8 @@
 			<version>1.0</version>
 			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
+	<build>
+		<finalName>websocket-relay</finalName>
+	</build>
 </project>
