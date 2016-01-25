@@ -122,8 +122,8 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			});
 
 			// Data preparation
-			var taskNames = getDayTaskNames();
-			taskNames = taskNames.filter(filter);
+			var dayTaskNames = getDayTaskNames();
+			var taskNames = dayTaskNames.filter(filter);
 
 			// Task rects
 			var taskSelection = svg.selectAll("." + taskClass).data(taskNames);
@@ -199,7 +199,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			taskSelection.call(drag);
 			taskTextSelection.call(drag);
 
-			bus.send("day-planned");
+			bus.send("day-planned", [ dayTaskNames ]);
 		};
 
 		return {
@@ -229,29 +229,29 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 	}, width, height, width / 2);
 
 	bus.listen("data-ready", function() {
-			var taskNames = getDayTaskNames();
+		var taskNames = getDayTaskNames();
 
-			for (var i = 0; i < taskNames.length; i++) {
-				var task = taskTree.getTask(taskNames[i]);
-				if (!task.hasOwnProperty("dayStart")) {
-					var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
-					if (taskLength != utils.DAY_MILLIS) {
-						task["dayStart"] = toHour(task.getStartDate());
-						task["dayEnd"] = toHour(task.getEndDate());
-						task["plannedInDay"] = true;
-					} else {
-						task["dayStart"] = i;
-						task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
-						task["plannedInDay"] = false;
-					}
+		for (var i = 0; i < taskNames.length; i++) {
+			var task = taskTree.getTask(taskNames[i]);
+			if (!task.hasOwnProperty("dayStart")) {
+				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
+				if (taskLength != utils.DAY_MILLIS) {
+					task["dayStart"] = toHour(task.getStartDate());
+					task["dayEnd"] = toHour(task.getEndDate());
+					task["plannedInDay"] = true;
 				} else {
-					if (!task.hasOwnProperty("plannedInDay")) {
-						task["plannedInDay"] = true;
-					}
+					task["dayStart"] = i;
+					task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
+					task["plannedInDay"] = false;
+				}
+			} else {
+				if (!task.hasOwnProperty("plannedInDay")) {
+					task["plannedInDay"] = true;
 				}
 			}
+		}
 
-			refreshBoth();
+		refreshBoth();
 	});
 
 	bus.listen("refresh-task", function(e, taskName) {
