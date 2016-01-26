@@ -1,9 +1,18 @@
-define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, utils) {
+define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], function(bus, taskTree, utils,
+		timeIntervalFilter) {
 
 	var chartPlanned, chartUnplanned;
 	var interval = [ utils.today.getTime(), utils.today.getTime() + utils.DAY_MILLIS ];
-	var filterActivated = false;
 	var xScale, yScale;
+
+	var getDayTaskNames = function() {
+		var intervalFilter = timeIntervalFilter.createTimeIntervalFilter(function() {
+			return interval;
+		});
+		var taskNames = taskTree.visitTasks(taskTree.ROOT, intervalFilter, taskTree.VISIT_ALL_CHILDREN,
+				taskTree.NAME_EXTRACTOR);
+		return taskNames;
+	}
 
 	var refreshBoth = function() {
 		chartPlanned.refresh();
@@ -113,8 +122,8 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			});
 
 			// Data preparation
-			var taskNames = taskTree.getTaskNames();
-			taskNames = taskNames.filter(filter);
+			var dayTaskNames = getDayTaskNames();
+			var taskNames = dayTaskNames.filter(filter);
 
 			// Task rects
 			var taskSelection = svg.selectAll("." + taskClass).data(taskNames);
@@ -190,7 +199,7 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 			taskSelection.call(drag);
 			taskTextSelection.call(drag);
 
-			bus.send("day-planned");
+			bus.send("day-planned", [ dayTaskNames, interval[0] ]);
 		};
 
 		return {
@@ -220,33 +229,29 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	}, width, height, width / 2);
 
 	bus.listen("data-ready", function() {
-		if (filterActivated) {
-			var taskNames = taskTree.getTaskNames();
-			for (var i = 0; i < taskNames.length; i++) {
-				var task = taskTree.getTask(taskNames[i]);
-				if (!task.hasOwnProperty("dayStart")) {
-					var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
-					if (taskLength != utils.DAY_MILLIS) {
-						task["dayStart"] = toHour(task.getStartDate());
-						task["dayEnd"] = toHour(task.getEndDate());
-						task["plannedInDay"] = true;
-					} else {
-						task["dayStart"] = i;
-						task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
-						task["plannedInDay"] = false;
-					}
+		var taskNames = getDayTaskNames();
+
+		for (var i = 0; i < taskNames.length; i++) {
+			var task = taskTree.getTask(taskNames[i]);
+			if (!task.hasOwnProperty("dayStart")) {
+				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
+				if (taskLength != utils.DAY_MILLIS) {
+					task["dayStart"] = toHour(task.getStartDate());
+					task["dayEnd"] = toHour(task.getEndDate());
+					task["plannedInDay"] = true;
 				} else {
-					if (!task.hasOwnProperty("plannedInDay")) {
-						task["plannedInDay"] = true;
-					}
+					task["dayStart"] = i;
+					task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
+					task["plannedInDay"] = false;
+				}
+			} else {
+				if (!task.hasOwnProperty("plannedInDay")) {
+					task["plannedInDay"] = true;
 				}
 			}
-
-			refreshBoth();
-		} else {
-			filterActivated = true;
-			bus.send("activate-filter", interval);
 		}
+
+		refreshBoth();
 	});
 
 	bus.listen("refresh-task", function(e, taskName) {
@@ -257,12 +262,12 @@ define([ "message-bus", "task-tree", "utils", "d3" ], function(bus, taskTree, ut
 	bus.listen("day+", function() {
 		interval[0] += utils.DAY_MILLIS;
 		interval[1] += utils.DAY_MILLIS;
-		bus.send("activate-filter", interval);
+		bus.send("refresh-tree");
 	});
 
 	bus.listen("day-", function() {
 		interval[0] -= utils.DAY_MILLIS;
 		interval[1] -= utils.DAY_MILLIS;
-		bus.send("activate-filter", interval);
+		bus.send("refresh-tree");
 	});
 });

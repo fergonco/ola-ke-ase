@@ -15,7 +15,7 @@ define([ "message-bus", "task-tree" ], function(bus, taskTree) {
 		selectedTask = task
 	});
 
-	bus.listen("activate-filter", function(e, start, end) {
-		day = start;
+	bus.listen("day-planned", function(e, dayTaskNames, currentDay) {
+		day = currentDay;
 	});
 });

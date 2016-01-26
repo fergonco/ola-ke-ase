@@ -80,8 +80,8 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		xScale = newXScale;
 		yScale = newYScale;
 	});
-	bus.listen("day-planned", function() {
-		taskNames = taskTree.getTaskNames().slice(0);
+	bus.listen("day-planned", function(e, dayTaskNames) {
+		taskNames = dayTaskNames;
 		taskNames.sort(function(a, b) {
 			return taskTree.getTask(a).dayStart - taskTree.getTask(b).dayStart;
 		});

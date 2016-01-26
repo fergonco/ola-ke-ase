@@ -385,7 +385,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN
 				: VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
-		visitTasks(ROOT, FILTER_ALL, childrenFilter, function(task, index) {
+		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task, index) {
 			nameIndicesMap[task.taskName] = index;
 		});
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);
@@ -440,13 +440,20 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			data : JSON.stringify(ROOT.tasks),
 			success : function(data, textStatus, jqXHR) {
 				bus.send("info", "Guardado");
+				bus.send("websocket-send", "saved");
 			},
 			errorMsg : "No se salvó",
 			complete : function() {
 				bus.send("hide-wait-mask");
 			}
 		});
+	});
 
+	bus.listen("websocket-receive", function(e, data) {
+		require([ "text!plan?a=" + new Date().getTime() ], function(newPlan) {
+			ROOT.tasks = JSON.parse(newPlan);
+			bus.send("refresh-tree");
+		});
 	});
 
 	return {
