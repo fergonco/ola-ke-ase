@@ -58,8 +58,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
 			for (var i = 0; i < task.tasks.length; i++) {
-				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]),
-						filter, visitChildren, extractor));
+				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor));
 			}
 		}
 
@@ -145,6 +144,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		task["isFolded"] = function() {
 			return task.hasOwnProperty("folded") && task.folded == true;
 		}
+		task["setFolded"] = function(foldedStatus) {
+			task.folded = foldedStatus;
+		}
 		task["getStatus"] = function() {
 			if (task.isGroup()) {
 				return "gruppe";
@@ -165,6 +167,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				return null;
 			}
 		};
+		task["setStartDate"] = function(newStartDate) {
+			task["startDate"] = newStartDate;
+			bus.send("dirty");
+		}
 		task["getEndDate"] = function() {
 			if (!task.isGroup()) {
 				if (task.hasOwnProperty("endDate")) {
@@ -176,6 +182,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				return null;
 			}
 		};
+		task["setEndDate"] = function(newEndDate) {
+			task["endDate"] = newEndDate;
+			bus.send("dirty");
+		}
 		task["createSibling"] = function(before) {
 			var newTask = {
 				taskName : getNewName()
@@ -196,6 +206,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				index = index + 1;
 			}
 			parentTask.tasks.splice(index, 0, newTask);
+			bus.send("dirty");
 			return newTask.taskName;
 		}
 		task["createChild"] = function() {
@@ -211,13 +222,16 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			if (task.getEndDate() != null) {
 				newTask.endDate = task.getEndDate();
 			}
-			return createChild(task, newTask);
+			var ret = createChild(task, newTask);
+			bus.send("dirty");
+			return ret;
 		}
 		task["removeChild"] = function(child) {
 			if (task.isGroup()) {
 				for (var i = 0; i < task.tasks.length; i++) {
 					if (task.tasks[i] == child) {
 						task.tasks.splice(i, 1);
+						bus.send("dirty");
 						break;
 					}
 				}
@@ -226,6 +240,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		task["setTaskName"] = function(name) {
 			if (validName(name)) {
 				task.taskName = name;
+				bus.send("dirty");
 				return true;
 			} else {
 				return name == task.taskName;
@@ -233,9 +248,11 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		task["moveUp"] = function() {
 			move(task, "up");
+			bus.send("dirty");
 		}
 		task["moveDown"] = function() {
 			move(task, "down");
+			bus.send("dirty");
 		}
 		task["moveToParentLevel"] = function() {
 			if (task.getParent() == null || task.getParent().getParent() == null) {
@@ -245,6 +262,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			var parentIndex = getTaskIndex(task.getParent().getParent().tasks, task.getParent());
 			task.getParent().tasks.splice(taskIndex, 1);
 			task.getParent().getParent().tasks.splice(parentIndex + 1, 0, task);
+			bus.send("dirty");
 		}
 		task["moveToNextBrother"] = function() {
 			var tasks = task.getParent().tasks;
@@ -255,6 +273,11 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			createChild(tasks[brotherIndex], task);
 			tasks.splice(taskIndex, 1);
+			bus.send("dirty");
+		}
+		task["setTimeRecords"] = function(newTimeRecords) {
+			task["timeRecords"] = newTimeRecords
+			bus.send("dirty");
 		}
 		task["startTimeRecord"] = function(time) {
 			if (!task.hasOwnProperty("timeRecords")) {
@@ -263,6 +286,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			task["timeRecords"].push({
 				"start" : time
 			});
+			bus.send("dirty");
 		}
 		task["stopTimeRecord"] = function(time) {
 			if (task.hasOwnProperty("timeRecords")) {
@@ -271,6 +295,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 					last["end"] = time;
 				}
 			}
+			bus.send("dirty");
 		}
 		task["hasOpenTimeRecord"] = function(time) {
 			if (task.hasOwnProperty("timeRecords") && task.timeRecords.length > 0) {
@@ -317,6 +342,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			return task.isGroup() ? 0 : 5;
 		}
+		task["setDailyDuration"] = function(newDailyDuration) {
+			task["dailyDuration"] = newDailyDuration;
+			bus.send("dirty");
+		}
 		task["setDayFinished"] = function(finished, day) {
 			var dayList;
 			if (task.hasOwnProperty("dayFinished")) {
@@ -333,6 +362,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 					dayList.splice(index, 1);
 				}
 			}
+			bus.send("dirty");
 		}
 		task["isDayFinished"] = function(day) {
 			if (task.hasOwnProperty("dayFinished")) {
@@ -349,6 +379,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				return "";
 			}
 		}
+		task["setContent"] = function(newContent) {
+			task["content"] = newContent;
+			bus.send("dirty");
+		}
 		task["getPresentationTimeDomain"] = function() {
 			var ret;
 			if (task.isGroup()) {
@@ -363,8 +397,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 						max = childTimeDomain[1];
 					}
 				}
-				ret = [ new Date(min.getTime() - utils.DAY_MILLIS / 3),
-						new Date(max.getTime() + utils.DAY_MILLIS / 3) ];
+				ret = [ new Date(min.getTime() - utils.DAY_MILLIS / 3), new Date(max.getTime() + utils.DAY_MILLIS / 3) ];
 			} else {
 				ret = [ task.getStartDate(), task.getEndDate() ];
 			}
@@ -380,10 +413,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			decorateTask(parent, task);
 		});
 		timeDomain = ROOT.getPresentationTimeDomain();
-		timeDomain = [ new Date(timeDomain[0].getTime() + pan),
-				new Date(timeDomain[1].getTime() + pan) ];
-		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN
-				: VISIT_UNFOLDED_CHILDREN;
+		timeDomain = [ new Date(timeDomain[0].getTime() + pan), new Date(timeDomain[1].getTime() + pan) ];
+		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN : VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
 		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task, index) {
 			nameIndicesMap[task.taskName] = index;
@@ -393,8 +424,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var dayCount = (timeDomain[1].getTime() - timeDomain[0].getTime()) / utils.DAY_MILLIS;
 		var daySize = scaleType == "week" ? 30 : 400;
 		xScale = d3.time.scale().domain(timeDomain).range([ 0, daySize * dayCount ]).clamp(false);
-		yScale = d3.scale.ordinal().domain(taskNames).rangeRoundBands([ 0, taskNames.length * 20 ],
-				.1);
+		yScale = d3.scale.ordinal().domain(taskNames).rangeRoundBands([ 0, taskNames.length * 20 ], .1);
 		statusList = [];
 		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task) {
 			var taskStatus = task.getStatus();
@@ -439,8 +469,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			contentType : "application/json",
 			data : JSON.stringify(ROOT.tasks),
 			success : function(data, textStatus, jqXHR) {
-				bus.send("info", "Guardado");
 				bus.send("websocket-send", "saved");
+				bus.send("saved");
 			},
 			errorMsg : "No se salvó",
 			complete : function() {

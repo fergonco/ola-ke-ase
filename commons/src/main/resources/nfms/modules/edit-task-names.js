@@ -21,9 +21,9 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 			if (!task.setTaskName(object["taskName"])) {
 				return false;
 			}
-			task["dailyDuration"] = object["dailyDuration"];
-			task["content"] = object["content"];
-			task["timeRecords"] = object["timeRecords"];
+			task.setDailyDuration(object["dailyDuration"]);
+			task.setContent(object["content"]);
+			task.setTimeRecords(object["timeRecords"]);
 			return true;
 		});
 		generated.formClosedOk(function() {

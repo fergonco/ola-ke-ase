@@ -11,7 +11,7 @@ define([ "message-bus", "task-tree" ], function(bus, taskTree) {
 	bus.listen("toggle-folded-selected", function() {
 		var task = taskTree.getTask(selectedTaskName);
 		if (task.isGroup()) {
-			task["folded"] = !task.isFolded();
+			task.setFolded(!task.isFolded());
 			bus.send("refresh-tree");
 		}
 	});
