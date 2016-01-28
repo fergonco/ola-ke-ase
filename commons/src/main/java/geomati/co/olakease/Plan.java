@@ -1,6 +1,5 @@
 package geomati.co.olakease;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Date;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ public class Plan extends HttpServlet {
 			+ "/.olakease/", "plan.json");
 
 	// private File planFile = new File(
-	// "/home/fergonco/b/java/olakease/olakease-app/plan.json");
+	// "/home/fergonco/b/java/olakease/olakease/olakease-app/plan.json");
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -45,9 +45,10 @@ public class Plan extends HttpServlet {
 				+ new Date().getTime() + ".json");
 		FileUtils.copyFile(planFile, backupFile);
 
-		BufferedReader reader = req.getReader();
+		ServletInputStream stream = req.getInputStream();
+		String param = IOUtils.toString(stream, "UTF-8");
 		OutputStream out = new FileOutputStream(planFile);
-		IOUtils.copy(reader, out, "UTF-8");
+		IOUtils.write(param, out);
 
 		out.close();
 
