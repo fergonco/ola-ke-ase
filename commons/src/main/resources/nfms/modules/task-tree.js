@@ -47,18 +47,27 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		return task.taskName;
 	};
 
-	var visitTasks = function(task, filter, visitChildren, extractor) {
-		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor);
+	var visitAllTasks = function(extractor) {
+		return visitTasksWithIndex(null, ROOT, [], function() {
+			return true;
+		}, function() {
+			return true;
+		}, extractor, true);
 	}
 
-	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor) {
+	var visitTasks = function(task, filter, visitChildren, extractor) {
+		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor, false);
+	}
+
+	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor, overrideFilter) {
 		var ret = [];
-		if (filter(task) && (userFilter == null || userFilter(task))) {
+		if (overrideFilter || ((!task.hasOwnProperty("archived") || !task["archived"])//
+				&& filter(task) && (userFilter == null || userFilter(task)))) {
 			ret = ret.concat(extractor(task, index, parent));
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
 			for (var i = 0; i < task.tasks.length; i++) {
-				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor));
+				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor, overrideFilter));
 			}
 		}
 
@@ -404,12 +413,23 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 			return ret;
 		}
+		task["isArchived"] = function() {
+			if (task.hasOwnProperty("archived")) {
+				return task.archived;
+			} else {
+				return false;
+			}
+		}
+		task["setArchived"] = function(archived) {
+			task["archived"] = archived;
+			bus.send("dirty");
+		}
 
 	}
 
 	bus.listen("refresh-tree", function(e) {
 		decorateTask(null, ROOT);
-		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task, index, parent) {
+		visitAllTasks(function(task, index, parent) {
 			decorateTask(parent, task);
 		});
 		timeDomain = ROOT.getPresentationTimeDomain();
