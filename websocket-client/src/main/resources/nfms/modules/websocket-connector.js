@@ -12,11 +12,11 @@ define([ "message-bus" ], function(bus) {
 
 	var socket = new WebSocket(uri);
 	socket.onmessage = function(event) {
-		bus.send("websocket-receive", event.data);
+		bus.send("websocket-receive", JSON.parse(event.data));
 	}
 
-	bus.listen("websocket-send", function(e, msg) {
-		socket.send(msg);
+	bus.listen("websocket-send-json", function(e, msg) {
+		socket.send(JSON.stringify(msg));
 	});
 
 });

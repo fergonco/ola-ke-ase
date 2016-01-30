@@ -143,7 +143,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		task.tasks.splice(0, 0, newTask);
 		return newTask.taskName;
 	}
-	var decorateTask = function(parent, task) {
+	function decorateTask(parent, task) {
 		task["getParent"] = function() {
 			return parent;
 		}
@@ -489,7 +489,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			contentType : "application/json",
 			data : JSON.stringify(ROOT.tasks),
 			success : function(data, textStatus, jqXHR) {
-				bus.send("websocket-send", "saved");
+				bus.send("websocket-send-json", {
+					"type" : "saved"
+				});
 				bus.send("saved");
 			},
 			errorMsg : "No se salvó",
@@ -500,10 +502,12 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	});
 
 	bus.listen("websocket-receive", function(e, data) {
-		require([ "text!plan?a=" + new Date().getTime() ], function(newPlan) {
-			ROOT.tasks = JSON.parse(newPlan);
-			bus.send("refresh-tree");
-		});
+		if (data["type"] == "saved") {
+			require([ "text!plan?a=" + new Date().getTime() ], function(newPlan) {
+				ROOT.tasks = JSON.parse(newPlan);
+				bus.send("refresh-tree");
+			});
+		}
 	});
 
 	return {

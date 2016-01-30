@@ -17,8 +17,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 	}
 
 	var updateSelection = function() {
-		var selectedTasksJoin = d3.select(".chart").selectAll(".taskSelection").data(
-				selectedTask != null ? [ selectedTask ] : []);
+		var selectedTasksJoin = d3.select(".chart").selectAll(".taskSelection").data(selectedTask != null ? [ selectedTask ] : []);
 		selectedTasksJoin.exit().remove();
 		selectedTasksJoin.enter().append("rect");
 		var margin = 3;
@@ -72,6 +71,14 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 			}
 			selectedTask = taskNames[selectedIndex];
 			bus.send("selection-update", selectedTask);
+			updateSelection();
+		}
+	});
+
+	bus.listen("select-task", function(e, taskName) {
+		if (taskNames.indexOf(taskName) != -1) {
+			selectedTask = taskName;
+			bus.send("selection-update", [ selectedTask ]);
 			updateSelection();
 		}
 	});
