@@ -48,7 +48,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 	}
 
 	var updateText = function(taskTextSelection) {
-		taskTextSelection//
+		taskTextSelection.style("font-size", "11px")//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
 			if (task.isPlannedInDay()) {
@@ -206,8 +206,8 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		}
 	}
 
-	var width = 1600;
-	var height = 1500;
+	var width = 1000;
+	var height = 800;
 	d3.select("body").append("div").attr("class", "allscreen");
 	var svg = d3.select(".allscreen").append("svg")//
 	.attr("class", "chart")//

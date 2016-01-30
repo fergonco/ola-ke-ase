@@ -1,3 +1,14 @@
+html {
+	height: 100%
+}
+body {
+	height: 93%
+}
+.allscreen {
+	height: 100%;
+	overflow: scroll;
+}
+
 .hours {
 	fill: none;
 	stroke: #000000;
