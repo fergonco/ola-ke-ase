@@ -1,9 +1,9 @@
 define([], function() {
 	var today = new Date();
-	today.setHours(0);
-	today.setMinutes(0);
-	today.setSeconds(0);
-	today.setMilliseconds(0);
+	today.setUTCHours(0);
+	today.setUTCMinutes(0);
+	today.setUTCSeconds(0);
+	today.setUTCMilliseconds(0);
 
 	var formatDate = function(date) {
 		return (date.getUTCMonth() + 1) + "/" + date.getUTCDate() + "/" + date.getUTCFullYear()

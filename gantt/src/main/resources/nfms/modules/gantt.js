@@ -14,11 +14,11 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var getWeekends = function(timeDomain) {
 		var ret = [];
 		var startDate = new Date(timeDomain[0]);
-		startDate.setHours(0);
-		startDate.setMinutes(0);
-		startDate.setSeconds(0);
-		startDate.setMilliseconds(0);
-		var daysUntilSaturday = 6 - startDate.getDay();
+		startDate.setUTCHours(0);
+		startDate.setUTCMinutes(0);
+		startDate.setUTCSeconds(0);
+		startDate.setUTCMilliseconds(0);
+		var daysUntilSaturday = 6 - startDate.getUTCDay();
 		var firstSaturday = new Date(startDate.getTime() + daysUntilSaturday * utils.DAY_MILLIS);
 		while (firstSaturday < timeDomain[1]) {
 			ret.push(firstSaturday);
