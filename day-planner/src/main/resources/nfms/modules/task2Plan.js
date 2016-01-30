@@ -7,7 +7,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		var right = d3Event.keyCode == 39;
 		if (left || right) {
 			var task = taskTree.getTask(selectedTask);
-			task.plannedInDay = left;
+			task.setPlannedInDay(left);
 			bus.send("refresh-tree");
 		}
 	});

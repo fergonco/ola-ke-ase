@@ -155,6 +155,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		task["setFolded"] = function(foldedStatus) {
 			task.folded = foldedStatus;
+			bus.send("dirty");
 		}
 		task["getStatus"] = function() {
 			if (task.isGroup()) {
@@ -245,6 +246,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 					}
 				}
 			}
+		}
+		task["getTaskName"] = function() {
+			return task.taskName;
 		}
 		task["setTaskName"] = function(name) {
 			if (validName(name)) {
@@ -424,7 +428,61 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			task["archived"] = archived;
 			bus.send("dirty");
 		}
-
+		var toHour = function(date) {
+			return date.getUTCHours() + date.getMinutes() / 60;
+		}
+		task["getDayStart"] = function() {
+			if (task.hasOwnProperty("dayStart")) {
+				return task.dayStart;
+			} else {
+				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
+				if (taskLength != utils.DAY_MILLIS) {
+					return toHour(task.getStartDate());
+				} else {
+					return task.getTaskName().length % 20;
+				}
+			}
+		}
+		task["setDayStart"] = function(dayStart) {
+			task.dayStart = dayStart;
+			bus.send("dirty");
+		}
+		task["getDayEnd"] = function() {
+			if (task.hasOwnProperty("dayEnd")) {
+				return task.dayEnd;
+			} else {
+				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
+				if (taskLength != utils.DAY_MILLIS) {
+					return toHour(task.getEndDate());
+				} else {
+					return task.getDayStart() + task.getDailyDuration();
+				}
+			}
+		}
+		task["setDayEnd"] = function(dayEnd) {
+			task.dayEnd = dayEnd;
+			bus.send("dirty");
+		}
+		task["isPlannedInDay"] = function() {
+			if (task.hasOwnProperty("plannedInDay")) {
+				return task.plannedInDay;
+			} else {
+				if (!task.hasOwnProperty("dayStart")) {
+					var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
+					if (taskLength != utils.DAY_MILLIS) {
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return true;
+				}
+			}
+		}
+		task["setPlannedInDay"] = function(planned) {
+			task.plannedInDay = planned;
+			bus.send("dirty");
+		}
 	}
 
 	bus.listen("refresh-tree", function(e) {

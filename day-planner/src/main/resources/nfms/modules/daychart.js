@@ -1,5 +1,4 @@
-define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], function(bus, taskTree, utils,
-		timeIntervalFilter) {
+define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], function(bus, taskTree, utils, timeIntervalFilter) {
 
 	var chartPlanned, chartUnplanned;
 	var interval = [ utils.today.getTime(), utils.today.getTime() + utils.DAY_MILLIS ];
@@ -9,8 +8,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		var intervalFilter = timeIntervalFilter.createTimeIntervalFilter(function() {
 			return interval;
 		});
-		var taskNames = taskTree.visitTasks(taskTree.ROOT, intervalFilter, taskTree.VISIT_ALL_CHILDREN,
-				taskTree.NAME_EXTRACTOR);
+		var taskNames = taskTree.visitTasks(taskTree.ROOT, intervalFilter, taskTree.VISIT_ALL_CHILDREN, taskTree.NAME_EXTRACTOR);
 		return taskNames;
 	}
 
@@ -27,7 +25,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		taskSelection//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
-			if (task.plannedInDay) {
+			if (task.isPlannedInDay()) {
 				return xScale(5);
 			} else {
 				return xScale(55);
@@ -38,11 +36,11 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		})//
 		.attr("y", function(d, i) {
 			var task = taskTree.getTask(d);
-			return yScale(task.dayStart);
+			return yScale(task.getDayStart());
 		})//
 		.attr("height", function(d) {
 			var task = taskTree.getTask(d);
-			return yScale(task.dayEnd) - yScale(task.dayStart);
+			return yScale(task.getDayEnd()) - yScale(task.getDayStart());
 		}).classed("finished", function(d) {
 			var task = taskTree.getTask(d);
 			return task.isDayFinished(interval[0]);
@@ -53,7 +51,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		taskTextSelection//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
-			if (task.plannedInDay) {
+			if (task.isPlannedInDay()) {
 				return xScale(8);
 			} else {
 				return xScale(58);
@@ -61,7 +59,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		})//
 		.attr("y", function(d) {
 			var task = taskTree.getTask(d);
-			return yScale(task.dayStart) + 15;
+			return yScale(task.getDayStart()) + 15;
 		}) //
 		.html(function(d) {
 			var ret = d;
@@ -144,28 +142,28 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			var drag = d3.behavior.drag().on("dragstart", function(d) {
 				var task = taskTree.getTask(d);
 				dy = 0;
-				sourceY = yScale(task.dayStart);
+				sourceY = yScale(task.getDayStart());
 				setter = function(value) {
-					if (value >= 0 && value + task.dayEnd - task.dayStart <= 24) {
-						task.dayEnd = value + task.dayEnd - task.dayStart;
-						task.dayStart = value;
+					if (value >= 0 && value + task.getDayEnd() - task.getDayStart() <= 24) {
+						task.setDayEnd(value + task.getDayEnd() - task.getDayStart());
+						task.setDayStart(value);
 					}
 				};
 				if (d3.event.sourceEvent.shiftKey) {
 					var mouseY = d3.mouse(this)[1];
-					var startDistance = Math.abs(mouseY - yScale(task.dayStart));
-					var endDistance = Math.abs(mouseY - yScale(task.dayEnd));
+					var startDistance = Math.abs(mouseY - yScale(task.getDayStart()));
+					var endDistance = Math.abs(mouseY - yScale(task.getDayEnd()));
 					if (startDistance < endDistance) {
 						setter = function(value) {
-							if (value < task.dayEnd) {
-								task.dayStart = value;
+							if (value < task.getDayEnd()) {
+								task.setDayStart(value);
 							}
 						};
 					} else {
-						sourceY = yScale(task.dayEnd);
+						sourceY = yScale(task.getDayEnd());
 						setter = function(value) {
-							if (value > task.dayStart) {
-								task.dayEnd = value;
+							if (value > task.getDayStart()) {
+								task.setDayEnd(value);
 							}
 						};
 					}
@@ -182,8 +180,8 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 				setter(newTime);
 
 				var inPlanned = d3.mouse(this)[0] < xSplit;
-				if (task.plannedInDay != inPlanned) {
-					task.plannedInDay = inPlanned;
+				if (task.isPlannedInDay() != inPlanned) {
+					task.setPlannedInDay(inPlanned);
 					refreshBoth();
 				} else {
 					updateTask(d3.selectAll(".task").filter(function(d2) {
@@ -221,36 +219,14 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 
 	chartPlanned = chart("left", function(taskName) {
 		var task = taskTree.getTask(taskName);
-		return task.plannedInDay;
+		return task.isPlannedInDay();
 	}, width, height, width / 2);
 	chartUnplanned = chart("right", function(taskName) {
 		var task = taskTree.getTask(taskName);
-		return !task.plannedInDay;
+		return !task.isPlannedInDay();
 	}, width, height, width / 2);
 
 	bus.listen("data-ready", function() {
-		var taskNames = getDayTaskNames();
-
-		for (var i = 0; i < taskNames.length; i++) {
-			var task = taskTree.getTask(taskNames[i]);
-			if (!task.hasOwnProperty("dayStart")) {
-				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
-				if (taskLength != utils.DAY_MILLIS) {
-					task["dayStart"] = toHour(task.getStartDate());
-					task["dayEnd"] = toHour(task.getEndDate());
-					task["plannedInDay"] = true;
-				} else {
-					task["dayStart"] = i;
-					task["dayEnd"] = task["dayStart"] + task.getDailyDuration();
-					task["plannedInDay"] = false;
-				}
-			} else {
-				if (!task.hasOwnProperty("plannedInDay")) {
-					task["plannedInDay"] = true;
-				}
-			}
-		}
-
 		refreshBoth();
 	});
 
