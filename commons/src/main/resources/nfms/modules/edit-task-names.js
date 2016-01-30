@@ -10,14 +10,14 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 	});
 
 	bus.listen("edit-selected", function() {
-		var task = taskTree.getTask(selectedTaskName);
 		var input = d3.select("body").append("div")//
 		.attr("id", "edit-content")//
 		.attr("class", "editable");
 
 		var generated = uiGenerator.populate("edit-content", "edit-content-element", JSON
-				.parse(taskSchema), task);
+				.parse(taskSchema), taskTree.getTask(selectedTaskName));
 		generated.formAccepted(function(object) {
+			var task = taskTree.getTask(selectedTaskName);
 			if (!task.setTaskName(object["taskName"])) {
 				return false;
 			}
@@ -27,6 +27,7 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 			return true;
 		});
 		generated.formClosedOk(function() {
+			var task = taskTree.getTask(selectedTaskName);
 			input.remove();
 			bus.send("refresh-tree");
 			bus.send("select-task", [ task.taskName ]);
