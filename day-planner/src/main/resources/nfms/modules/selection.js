@@ -24,7 +24,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		selectedTasksJoin.attr("class", "taskSelection")//
 		.attr("x", function(d) {
 			var task = taskTree.getTask(d);
-			if (task.plannedInDay) {
+			if (task.isPlannedInDay()) {
 				return xScale(1);
 			} else {
 				return xScale(51);
@@ -35,11 +35,11 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		})//
 		.attr("y", function(d, i) {
 			var task = taskTree.getTask(d);
-			return yScale(task.dayStart) - margin;
+			return yScale(task.getDayStart()) - margin;
 		})//
 		.attr("height", function(d) {
 			var task = taskTree.getTask(d);
-			var diff = yScale(task.dayEnd) - yScale(task.dayStart);
+			var diff = yScale(task.getDayEnd()) - yScale(task.getDayStart());
 			return diff + 2 * margin;
 		});
 	};
@@ -90,7 +90,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 	bus.listen("day-planned", function(e, dayTaskNames) {
 		taskNames = dayTaskNames;
 		taskNames.sort(function(a, b) {
-			return taskTree.getTask(a).dayStart - taskTree.getTask(b).dayStart;
+			return taskTree.getTask(a).getDayStart() - taskTree.getTask(b).getDayStart();
 		});
 		updateSelection();
 	});
