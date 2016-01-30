@@ -491,6 +491,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			decorateTask(parent, task);
 		});
 		timeDomain = ROOT.getPresentationTimeDomain();
+		timeDomain[0] = new Date(utils.today.getTime() - 2 * utils.DAY_MILLIS);
 		timeDomain = [ new Date(timeDomain[0].getTime() + pan), new Date(timeDomain[1].getTime() + pan) ];
 		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN : VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
