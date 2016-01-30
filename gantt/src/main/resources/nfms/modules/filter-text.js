@@ -7,13 +7,24 @@ define([ "message-bus", "task-tree", "message-bus", "d3" ], function(bus, taskTr
 		return task.taskName.indexOf(currentText) != -1 || task.getContent().indexOf(currentText) != -1;
 	};
 
-	var input = d3.select("body").append("input").on("change", function() {
+	var input = d3.select("body").append("input").on("keyup", function() {
 		currentText = input.node().value;
-		if (currentText.trim().length == 0) {
-			bus.send("deactivate-filter");
-		} else {
-			bus.send("filter", [ FILTER_TEXT ]);
+		var results = taskTree.visitTasks(taskTree.ROOT, FILTER_TEXT, taskTree.VISIT_ALL_CHILDREN, taskTree.NAME_EXTRACTOR);
+		if (results.length > 0) {
+			var task = taskTree.getTask(results[0]).getParent();
+			while (task != null) {
+				if (task.isFolded()) {
+					task.setFolded(false);
+				}
+				task = task.getParent();
+			}
+			bus.send("select-task", results[0]);
+			bus.send("refresh-tree");
 		}
+	}).on("focus", function() {
+		bus.send("disable-keylistener");
+	}).on("blur", function() {
+		bus.send("enable-keylistener");
 	});
 
 });
