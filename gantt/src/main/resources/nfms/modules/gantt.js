@@ -150,10 +150,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var weekendSelection = level1.selectAll(".weekend").data(saturdays);
 		weekendSelection.exit().remove();
 		weekendSelection.enter().insert("rect", ":first-child");
-		weekendSelection.attr("class", "weekend").attr("x", dayX).attr("y", 0).attr("width",
-				function(d) {
-					return xScale(new Date(d.getTime() + 2 * utils.DAY_MILLIS)) - xScale(d);
-				}).attr("height", dayHeight);
+		weekendSelection.attr("class", "weekend").attr("x", dayX).attr("y", 0).attr("width", function(d) {
+			return xScale(new Date(d.getTime() + 2 * utils.DAY_MILLIS)) - xScale(d);
+		}).attr("height", dayHeight);
 		var dx;
 		var drag = d3.behavior.drag().on("dragstart", function(d) {
 			dx = 0;
@@ -188,8 +187,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var scaleUnit = taskTree.getScaleUnit();
 			newStartDate = new Date((scaleUnit * Math.floor(newStartDate.getTime() / scaleUnit)));
 
-			task.startDate = utils.formatDate(newStartDate);
-			task.endDate = utils.formatDate(new Date(newStartDate.getTime() + length));
+			task.setStartDate(utils.formatDate(newStartDate));
+			task.setEndDate(utils.formatDate(new Date(newStartDate.getTime() + length)));
 
 			updateTask(d3.select(this));
 			updateTaskHandlers(d3.selectAll(".taskdates").filter(function(d2) {
@@ -268,9 +267,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var scaleUnit = taskTree.getScaleUnit();
 			newDate = new Date((scaleUnit * Math.floor(newDate.getTime() / scaleUnit)));
 			if (d.dateIndex == 0) {
-				task.startDate = utils.formatDate(newDate);
+				task.setStartDate(utils.formatDate(newDate));
 			} else {
-				task.endDate = utils.formatDate(newDate);
+				task.setEndDate(utils.formatDate(newDate));
 			}
 			updateTaskHandlers(d3.select(this));
 			updateTask(d3.selectAll(".tasks").filter(function(d2) {
@@ -285,10 +284,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var todaySelection = level2.selectAll(".today").data([ utils.today ]);
 		todaySelection.exit().remove();
 		todaySelection.enter().insert("rect", ":first-child");
-		todaySelection.attr("class", "today").attr("x", dayX).attr("y", 0).attr("width",
-				function(d) {
-					return xScale(new Date(d.getTime() + utils.DAY_MILLIS)) - xScale(d);
-				}).attr("height", dayHeight);
+		todaySelection.attr("class", "today").attr("x", dayX).attr("y", 0).attr("width", function(d) {
+			return xScale(new Date(d.getTime() + utils.DAY_MILLIS)) - xScale(d);
+		}).attr("height", dayHeight);
 
 		// Hours
 		var hours = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 ];
