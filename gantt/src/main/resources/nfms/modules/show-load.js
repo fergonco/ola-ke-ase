@@ -28,8 +28,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				return "#" + color + color + color;
 			}
 		})//
-		.attr("title", function(d) {
-			return d;
+		.attr("title", function(d, index) {
+			return d + "h (" + new Date(timeDomain[0].getTime() + index * utils.DAY_MILLIS) + ")";
 		});
 	}
 
