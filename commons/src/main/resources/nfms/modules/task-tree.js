@@ -2,7 +2,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	var nameIndicesMap = {};
 	var timeDomain = null;
-	var showArchived= false;
+	var showArchived = false;
 	var userFilter = null;
 	var userChildrenFilter = null;
 	var pan = 0;
@@ -59,7 +59,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	var visitTasks = function(task, filter, visitChildren, extractor) {
 		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor, false);
 	}
-	
+
 	var visitTasksIgnoreUserFilter = function(task, filter, visitChildren, extractor) {
 		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor, true);
 	}
@@ -72,7 +72,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
 			for (var i = 0; i < task.tasks.length; i++) {
-				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor, overrideFilter));
+				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor,
+						overrideFilter));
 			}
 		}
 
@@ -506,7 +507,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);
 
 		var dayCount = (timeDomain[1].getTime() - timeDomain[0].getTime()) / utils.DAY_MILLIS;
-		var daySize = scaleType == "week" ? 30 : 400;
+		var daySize = scaleType == "month" ? 8 : scaleType == "week" ? 30 : 400;
 		xScale = d3.time.scale().domain(timeDomain).range([ 0, daySize * dayCount ]).clamp(false);
 		yScale = d3.scale.ordinal().domain(taskNames).rangeRoundBands([ 0, taskNames.length * 20 ], .1);
 		statusList = [];
@@ -531,7 +532,11 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	bus.listen("set-scale", function(e, type) {
 		scaleType = type;
-		scaleUnit = scaleType == "week" ? utils.DAY_MILLIS : 30 * 60 * 1000;
+		if (scaleType == "day") {
+			scaleUnit = 30 * 60 * 1000;
+		} else {
+			scaleUnit = utils.DAY_MILLIS;
+		}
 		bus.send("refresh-tree");
 	});
 
