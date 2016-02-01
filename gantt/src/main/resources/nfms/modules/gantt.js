@@ -308,7 +308,12 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1);
 		svg.append("g").attr("class", "y axis").call(yAxis);
 
-		var xAxis1 = d3.svg.axis().scale(xScale).tickSize(1).tickPadding(8);
+		var each = 2 * utils.DAY_MILLIS;
+		if (taskTree.getScaleType() == "month") {
+			each = 7 * utils.DAY_MILLIS;
+		}
+		var tickCount = Math.round((timeDomain[1].getTime() - timeDomain[0].getTime()) / each);
+		var xAxis1 = d3.svg.axis().scale(xScale).tickSize(1).tickPadding(8).ticks(tickCount);
 		var gXBottom = svg.append("g")//
 		.attr("class", "x axis")//
 		.attr("transform", "translate(0, " + (height - margin.top - margin.bottom) + ")")//
@@ -338,7 +343,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		} else {
 			xAxis1.tickFormat(d3.time.format("%d/%m"));
 			xAxis1.orient("top");
-			gXTop.call(xAxis1);
+			gXTop.call(xAxis1).selectAll("text").attr("dx", "15px");
 			xAxis1.orient("bottom");
 			gXBottom.call(xAxis1);
 		}
