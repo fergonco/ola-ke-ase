@@ -2,6 +2,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	var nameIndicesMap = {};
 	var timeDomain = null;
+	var showArchived= false;
 	var userFilter = null;
 	var userChildrenFilter = null;
 	var pan = 0;
@@ -58,11 +59,15 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	var visitTasks = function(task, filter, visitChildren, extractor) {
 		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor, false);
 	}
+	
+	var visitTasksIgnoreUserFilter = function(task, filter, visitChildren, extractor) {
+		return visitTasksWithIndex(null, task, [], filter, visitChildren, extractor, true);
+	}
 
 	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor, overrideFilter) {
 		var ret = [];
-		if (overrideFilter || ((!task.hasOwnProperty("archived") || !task["archived"])//
-				&& filter(task) && (userFilter == null || userFilter(task)))) {
+		var archivedFilter = showArchived || (!task.hasOwnProperty("archived") || !task["archived"]);
+		if (overrideFilter || (archivedFilter && filter(task) && (userFilter == null || userFilter(task)))) {
 			ret = ret.concat(extractor(task, index, parent));
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
@@ -540,6 +545,11 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		bus.send("refresh-tree");
 	});
 
+	bus.listen("show-archived", function(e, newShowArchived) {
+		showArchived = newShowArchived;
+		bus.send("refresh-tree");
+	});
+
 	bus.listen("save", function() {
 		bus.send("show-wait-mask", "Salvando...");
 		bus.send("ajax", {
@@ -577,6 +587,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		"VISIT_UNFOLDED_CHILDREN" : VISIT_UNFOLDED_CHILDREN,
 		"NAME_EXTRACTOR" : NAME_EXTRACTOR,
 		"visitTasks" : visitTasks,
+		"visitTasksIgnoreUserFilter" : visitTasksIgnoreUserFilter,
 		"getTimeDomain" : function() {
 			return timeDomain;
 		},
