@@ -489,6 +489,17 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			task.plannedInDay = planned;
 			bus.send("dirty");
 		}
+		task["getImportance"] = function() {
+			if (task.hasOwnProperty("importance")) {
+				return task.importance;
+			} else {
+				return 0;
+			}
+		}
+		task["setImportance"] = function(importance) {
+			task.importance = importance;
+			bus.send("dirty");
+		}
 	}
 
 	bus.listen("refresh-tree", function(e) {

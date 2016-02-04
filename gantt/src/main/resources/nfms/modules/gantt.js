@@ -11,6 +11,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var yScale;
 	var statusList;
 
+	var styleFunction = null;
+
 	var getWeekends = function(timeDomain) {
 		var ret = [];
 		var startDate = new Date(timeDomain[0]);
@@ -63,16 +65,23 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		.attr("title", function(d) {
 			return d;
 		})//
-		.attr("class", function(d) {
+		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
-			var barClass;
-			if (task.isGroup() && task.isFolded()) {
-				barClass = "gruppe-closed";
+			var style = "";
+			if (task.isGroup()) {
+				if (task.isFolded()) {
+					style = "fill: #000000";
+				} else {
+					style = "fill: #eeeeee; stroke: #000000; stroke-width: 1px;";
+				}
+			} else if (styleFunction != null) {
+				style = styleFunction(d);
 			} else {
-				barClass = task.getStatus();
+				style = "fill: #669900";
 			}
-			return "tasks bar-" + barClass;
+			return style;
 		}) //
+		.attr("class", "tasks") //
 		.attr("y", 0)//
 		.attr("transform", function(d) {
 			var dates = taskTree.getTask(d).getPresentationTimeDomain();
@@ -359,6 +368,11 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		updateTask(d3.selectAll(".task").filter(function(d) {
 			return d == taskName;
 		}));
+	});
+	
+	bus.listen("set-task-styler", function(e, newStyleFunction){
+		styleFunction = newStyleFunction;
+		bus.send("refresh-tree");
 	});
 
 });

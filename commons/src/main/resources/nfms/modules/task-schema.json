@@ -13,6 +13,11 @@
 			"title" : "Duration: ",
 			"type" : "float"
 		},
+		"importance" : {
+			"id" : "http://olakease.org/importance",
+			"title" : "Importance: ",
+			"type" : "integer"
+		},
 		"content" : {
 			"id" : "http://olakease.org/content",
 			"title" : "Multiline: ",
