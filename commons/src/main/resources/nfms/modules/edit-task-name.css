@@ -6,3 +6,35 @@
 	height: 80%;
 	background-color: #777777;
 }
+
+#div-taskName {
+	float: left;
+}
+
+#div-importance {
+	float: left;
+}
+
+#div-dailyDuration {
+	float: left;
+}
+
+#div-content {
+	float: left;
+	height: 90%;
+	width: 65%;
+}
+
+#div-content textArea {
+	width: 99%;
+	height: 100%;
+}
+
+#div-timeRecords {
+	float: right;
+	width: 35%;
+}
+
+#div-timeRecords textArea {
+	width: 95%;
+}
