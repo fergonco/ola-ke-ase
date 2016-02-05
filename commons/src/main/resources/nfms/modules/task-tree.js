@@ -67,7 +67,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor, overrideFilter) {
 		var ret = [];
 		var archivedFilter = showArchived || (!task.hasOwnProperty("archived") || !task["archived"]);
-		if (overrideFilter || (archivedFilter && filter(task) && (userFilter == null || userFilter(task)))) {
+		if (filter(task) && (overrideFilter || (archivedFilter && (userFilter == null || userFilter(task))))) {
 			ret = ret.concat(extractor(task, index, parent));
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
@@ -403,12 +403,15 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			bus.send("dirty");
 		}
 		task["getPresentationTimeDomain"] = function() {
+			return task.getTimeDomain(utils.DAY_MILLIS / 3);
+		}
+		task["getTimeDomain"] = function(groupMargin) {
 			var ret;
 			if (task.isGroup()) {
 				var min = null;
 				var max = null;
 				for (var i = 0; i < task.tasks.length; i++) {
-					var childTimeDomain = task.tasks[i].getPresentationTimeDomain();
+					var childTimeDomain = task.tasks[i].getTimeDomain(groupMargin);
 					if (min == null || min > childTimeDomain[0]) {
 						min = childTimeDomain[0];
 					}
@@ -416,7 +419,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 						max = childTimeDomain[1];
 					}
 				}
-				ret = [ new Date(min.getTime() - utils.DAY_MILLIS / 3), new Date(max.getTime() + utils.DAY_MILLIS / 3) ];
+				ret = [ new Date(min.getTime() - groupMargin), new Date(max.getTime() + groupMargin) ];
 			} else {
 				ret = [ task.getStartDate(), task.getEndDate() ];
 			}
