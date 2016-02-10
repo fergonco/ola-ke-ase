@@ -63,7 +63,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var updateTask = function(selection) {
 		selection//
 		.attr("title", function(d) {
-			return d;
+			return d + ": " + utils.formatTime(taskTree.getTask(d).getEstimatedTime());
 		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
@@ -369,8 +369,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			return d == taskName;
 		}));
 	});
-	
-	bus.listen("set-task-styler", function(e, newStyleFunction){
+
+	bus.listen("set-task-styler", function(e, newStyleFunction) {
 		styleFunction = newStyleFunction;
 		bus.send("refresh-tree");
 	});

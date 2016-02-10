@@ -346,10 +346,31 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			if (task.isGroup()) {
 				for (var i = 0; i < task.tasks.length; i++) {
-					acum += task.tasks[i].getTimeRecordSum();
+					acum += task.tasks[i].getTimeRecordSum(min, max);
 				}
 
 			}
+			return acum;
+		}
+		task["getEstimatedTime"] = function() {
+			var acum = 0;
+			if (!task.isGroup()) {
+				var numDays = 0;
+				var day = task.getStartDate().getTime();
+				while (day < task.getEndDate().getTime()) {
+					console.log(new Date(day).toGMTString());
+					if (new Date(day).getUTCDay() > 0 && new Date(day).getUTCDay() < 6) {
+						numDays++;
+					}
+					day += utils.DAY_MILLIS;
+				}
+				acum += numDays * task.getDailyDuration() * 60 * 60 * 1000;
+			} else {
+				for (var i = 0; i < task.tasks.length; i++) {
+					acum += task.tasks[i].getEstimatedTime();
+				}
+			}
+
 			return acum;
 		}
 		task["getDailyDuration"] = function() {
