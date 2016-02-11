@@ -23,6 +23,8 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 			}
 			task.setDailyDuration(object["dailyDuration"]);
 			task.setImportance(object["importance"]);
+			task.setDedicationLowerLimit(object["dedicationLowerLimit"]);
+			task.setDedicationUpperLimit(object["dedicationUpperLimit"]);
 			task.setContent(object["content"]);
 			task.setTimeRecords(object["timeRecords"]);
 			return true;
