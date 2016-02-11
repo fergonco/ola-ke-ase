@@ -67,8 +67,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor, overrideFilter) {
 		var ret = [];
-		var archivedFilter = showArchived || (!task.hasOwnProperty("archived") || !task["archived"]);
-		if (filter(task) && (overrideFilter || (archivedFilter && (userFilter == null || userFilter(task))))) {
+		if (filter(task) && (overrideFilter || ((showArchived || !task.isArchived()) && (userFilter == null || userFilter(task))))) {
 			ret = ret.concat(extractor(task, index, parent));
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
@@ -430,23 +429,32 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			setter(task, "content", newContent);
 		}
 		task["getPresentationTimeDomain"] = function() {
-			return task.getTimeDomain(utils.DAY_MILLIS / 3);
+			return task.getTimeDomain(utils.DAY_MILLIS / 3, function(task) {
+				return showArchived || !task.isArchived();
+			});
 		}
-		task["getTimeDomain"] = function(groupMargin) {
-			var ret;
+		task["getTimeDomain"] = function(groupMargin, filter) {
+			var ret = null;
 			if (task.isGroup()) {
 				var min = null;
 				var max = null;
 				for (var i = 0; i < task.tasks.length; i++) {
-					var childTimeDomain = task.tasks[i].getTimeDomain(groupMargin);
-					if (min == null || min > childTimeDomain[0]) {
-						min = childTimeDomain[0];
+					if (filter && !filter(task.tasks[i])) {
+						continue;
 					}
-					if (max == null || max < childTimeDomain[1]) {
-						max = childTimeDomain[1];
+					var childTimeDomain = task.tasks[i].getTimeDomain(groupMargin, filter);
+					if (childTimeDomain != null) {
+						if (min == null || min > childTimeDomain[0]) {
+							min = childTimeDomain[0];
+						}
+						if (max == null || max < childTimeDomain[1]) {
+							max = childTimeDomain[1];
+						}
 					}
 				}
-				ret = [ new Date(min.getTime() - groupMargin), new Date(max.getTime() + groupMargin) ];
+				if (min != null && max != null) {
+					ret = [ new Date(min.getTime() - groupMargin), new Date(max.getTime() + groupMargin) ];
+				}
 			} else {
 				ret = [ task.getStartDate(), task.getEndDate() ];
 			}
@@ -454,7 +462,16 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			return ret;
 		}
 		task["isArchived"] = function() {
-			return getter(task, "archived", false);
+			if (!task.isGroup()) {
+				return getter(task, "archived", false);
+			} else {
+				for (var i = 0; i < task.tasks.length; i++) {
+					if (!task.tasks[i].isArchived()) {
+						return false;
+					}
+				}
+				return true;
+			}
 		}
 		task["setArchived"] = function(archived) {
 			setter(task, "archived", archived);
