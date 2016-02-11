@@ -1,5 +1,8 @@
 define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskTree) {
 
+	var NONE = 0, ROOT = 1, GROUPS = 2;
+
+	var mode = 0;
 	var timeDomain;
 	var xScale;
 	var yScale;
@@ -10,26 +13,43 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var xScale = taskTree.getXScale();
 		var yScale = taskTree.getYScale();
 		var dayWidthPixels = xScale(new Date(timeDomain[0].getTime() + utils.DAY_MILLIS)) - xScale(timeDomain[0]);
-		var colors = [ "f", "f", "f", "f", "f", "a", "a", "a", "a", "7", "7", "7", "3" ];
 		loadSelection.attr("class", "load")//
 		.attr("x", function(d, index) {
-			var task = taskTree.getTask(d.groupName);
+			var task;
+			if (d.groupName == "root") {
+				task = taskTree.ROOT;
+			} else {
+				task = taskTree.getTask(d.groupName);
+			}
 			var taskTimeDomain = task.getTimeDomain(0);
 			return xScale(taskTimeDomain[0].getTime() + d.groupIndex * utils.DAY_MILLIS);
 		})//
 		.attr("y", function(d) {
-			return yScale(d.groupName);
+			if (d.groupName == "root") {
+				return 0;
+			} else {
+				return yScale(d.groupName);
+			}
 		})//
 		.attr("width", dayWidthPixels)//
 		.attr("height", yScale.rangeBand() / 2)//
 		.style("stroke", "black")//
 		.style("fill", function(d) {
-			var load = Math.round(d.load);
-			if (load >= colors.length) {
-				return "red";
+			var task;
+			if (d.groupName == "root") {
+				task = taskTree.ROOT;
 			} else {
-				var color = colors[load];
-				return "#" + color + color + color;
+				task = taskTree.getTask(d.groupName);
+			}
+			var min = task.getDedicationLowerLimit();
+			var max = task.getDedicationUpperLimit();
+
+			if (max != null && d.load > max) {
+				return "red";
+			} else if (min != null && d.load < min) {
+				return "blue";
+			} else {
+				return "white";
 			}
 		})//
 		.attr("title", function(d, index) {
@@ -37,15 +57,20 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		});
 	}
 
-	bus.listen("gantt-created", function() {
+	function refresh() {
 		var timeDomain = taskTree.getTimeDomain();
-		var groups = taskTree.visitTasksIgnoreUserFilter(taskTree.ROOT, function(task) {
-			return task != taskTree.ROOT && task.isGroup();
-		}, taskTree.VISIT_UNFOLDED_CHILDREN, function(task) {
-			return task;
-		});
+		var groups = null;
+		if (mode == GROUPS) {
+			groups = taskTree.visitTasksIgnoreUserFilter(taskTree.ROOT, function(task) {
+				return task != taskTree.ROOT && task.isGroup();
+			}, taskTree.VISIT_UNFOLDED_CHILDREN, function(task) {
+				return task;
+			});
+		} else if (mode == ROOT) {
+			groups = [ taskTree.ROOT ];
+		}
 		var loadData = [];
-		for (var i = 0; i < groups.length; i++) {
+		for (var i = 0; mode != NONE && i < groups.length; i++) {
 			var groupLoadData = [];
 			var groupTimeDomain = groups[i].getTimeDomain(0);
 			var dayCount = Math.round((groupTimeDomain[1].getTime() - groupTimeDomain[0].getTime()) / utils.DAY_MILLIS);
@@ -57,7 +82,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				});
 			}
 			var tasks = taskTree.visitTasksIgnoreUserFilter(groups[i], function(task) {
-				return !task.isGroup();
+				return !task.isGroup() && !task.isArchived();
 			}, taskTree.VISIT_ALL_CHILDREN, function(task) {
 				return task;
 			});
@@ -78,6 +103,15 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		loadSelection.exit().remove();
 		loadSelection.enter().append("rect");
 		updateLoadSelection(loadSelection);
+	}
+
+	bus.listen("gantt-created", refresh);
+
+	d3.select("body").append("div")//
+	.attr("class", "button")//
+	.html("Mostrar dedicación grupos").on("click", function() {
+		mode = (mode + 1) % 3;
+		refresh();
 	});
 
 	bus.listen("selection-update", function() {

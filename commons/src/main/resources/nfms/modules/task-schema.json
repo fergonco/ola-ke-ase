@@ -18,6 +18,16 @@
 			"title" : "Importance: ",
 			"type" : "integer"
 		},
+		"dedicationUpperLimit" : {
+			"id" : "http://olakease.org/dedicationUpperLimit",
+			"title" : "Dedication upper limit: ",
+			"type" : "integer"
+		},
+		"dedicationLowerLimit" : {
+			"id" : "http://olakease.org/dedicationLowerLimit",
+			"title" : "Dedication lower limit: ",
+			"type" : "integer"
+		},
 		"content" : {
 			"id" : "http://olakease.org/content",
 			"title" : "Multiline: ",
