@@ -33,8 +33,7 @@ define([ "d3" ], function(utils) {
 				propertyNames.push(name);
 				var value = null;
 				var getterName = "get" + name.charAt(0).toUpperCase() + name.substr(1);
-				if (originalObject.hasOwnProperty(getterName)
-						&& typeof originalObject[getterName] === "function") {
+				if (originalObject.hasOwnProperty(getterName) && typeof originalObject[getterName] === "function") {
 					value = originalObject[getterName]();
 				} else {
 					value = originalObject[name];
@@ -43,8 +42,7 @@ define([ "d3" ], function(utils) {
 			}
 		}
 
-		var selection = d3.select("#" + containerId).selectAll("." + elementClass).data(
-				propertyNames);
+		var selection = d3.select("#" + containerId).selectAll("." + elementClass).data(propertyNames);
 		selection.enter().append(function(d) {
 			var property = schema.properties[d];
 			var type = property.type;
@@ -70,13 +68,21 @@ define([ "d3" ], function(utils) {
 					input = document.createElement("input");
 					input.value = toFormString(object[d]);
 					updater = function() {
-						object[d] = parseInt(input.value);
+						if (input.value == "") {
+							object[d] = null;
+						} else {
+							object[d] = parseInt(input.value);
+						}
 					};
 				} else if (type == "float") {
 					input = document.createElement("input");
 					input.value = toFormString(object[d]);
 					updater = function() {
-						object[d] = parseFloat(input.value);
+						if (input.value == "") {
+							object[d] = null;
+						} else {
+							object[d] = parseFloat(input.value);
+						}
 					};
 				} else if (type == "string") {
 					if (annotations && annotations["multiline"]) {
@@ -88,8 +94,13 @@ define([ "d3" ], function(utils) {
 						input = document.createElement("input");
 						input.value = toFormString(object[d]);
 					}
+					var allowEmptyString = annotations && annotations["allow-empty-string"];
 					updater = function() {
-						object[d] = input.value;
+						if (input.value == "" && !allowEmptyString) {
+							object[d] = null;
+						} else {
+							object[d] = input.value;
+						}
 					};
 				}
 				updaters.push(updater);

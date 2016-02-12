@@ -21,19 +21,20 @@
 		"dedicationUpperLimit" : {
 			"id" : "http://olakease.org/dedicationUpperLimit",
 			"title" : "Dedication upper limit: ",
-			"type" : "integer"
+			"type" : "float"
 		},
 		"dedicationLowerLimit" : {
 			"id" : "http://olakease.org/dedicationLowerLimit",
 			"title" : "Dedication lower limit: ",
-			"type" : "integer"
+			"type" : "float"
 		},
 		"content" : {
 			"id" : "http://olakease.org/content",
 			"title" : "Multiline: ",
 			"type" : "string",
 			"ui-annotations" : {
-				"multiline" : true
+				"multiline" : true,
+				"allow-empty-string" : true
 			}
 		},
 		"timeRecords" : {
