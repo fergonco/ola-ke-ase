@@ -352,7 +352,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 						end = new Date().getTime();
 					}
 					var start = Math.max(min, record.start);
-					acum = acum + end - start;
+					if (end > start) {
+						acum = acum + end - start;
+					}
 				}
 			}
 			if (task.isGroup()) {

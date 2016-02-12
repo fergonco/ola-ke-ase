@@ -12,6 +12,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var statusList;
 
 	var styleFunction = null;
+	var timeFilter = null;
 
 	var getWeekends = function(timeDomain) {
 		var ret = [];
@@ -63,7 +64,15 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var updateTask = function(selection) {
 		selection//
 		.attr("title", function(d) {
-			return d + ": " + utils.formatTime(taskTree.getTask(d).getEstimatedTime());
+			var time = null;
+			if (timeFilter == null) {
+				time = taskTree.getTask(d).getTimeRecordSum();
+			} else {
+				time = taskTree.getTask(d).getTimeRecordSum(timeFilter[0], timeFilter[1]);
+			}
+			var done = utils.formatTime(time);
+			var estimated = utils.formatTime(taskTree.getTask(d).getEstimatedTime());
+			return d + ": " + done + "/" + estimated;
 		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
@@ -136,7 +145,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		.attr("width", handleWidth);
 	}
 
-	bus.listen("data-ready", function() {
+	function refresh() {
 		timeDomain = taskTree.getTimeDomain();
 		taskNames = taskTree.getTaskNames();
 		xScale = taskTree.getXScale();
@@ -361,7 +370,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		svg.call(zoom);
 
 		bus.send("gantt-created", [ svg ]);
-	});
+	}
+
+	bus.listen("data-ready", refresh);
 
 	bus.listen("refresh-task", function(e, taskName) {
 		var task = taskTree.getTask(taskName);
@@ -373,6 +384,16 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	bus.listen("set-task-styler", function(e, newStyleFunction) {
 		styleFunction = newStyleFunction;
 		bus.send("refresh-tree");
+	});
+
+	bus.listen("activate-filter", function(e, min, max) {
+		timeFilter = [ min, max ];
+		refresh();
+	});
+
+	bus.listen("deactivate-filter", function(e) {
+		timeFilter = null;
+		refresh();
 	});
 
 });
