@@ -531,6 +531,18 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 	}
 
+	function addFolders(taskNames) {
+		for (var i = 0; i < taskNames.length; i++) {
+			var parent = getTask(taskNames[i]).getParent();
+			while (parent != ROOT) {
+				if (taskNames.indexOf(parent.getTaskName()) == -1) {
+					taskNames.splice(i, 0, parent.getTaskName());
+				}
+				parent = parent.getParent();
+			}
+		}
+	}
+
 	bus.listen("refresh-tree", function(e) {
 		decorateTask(null, ROOT);
 		visitAllTasks(function(task, index, parent) {
@@ -545,6 +557,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			nameIndicesMap[task.taskName] = index;
 		});
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);
+		addFolders(taskNames);
 
 		var dayCount = (timeDomain[1].getTime() - timeDomain[0].getTime()) / utils.DAY_MILLIS;
 		var daySize = scaleType == "month" ? 8 : scaleType == "week" ? 30 : 400;
