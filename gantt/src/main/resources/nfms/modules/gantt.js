@@ -347,7 +347,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			}
 			xAxis1.tickValues(hourTicks).tickFormat(d3.time.format("%H:%M"));
 			xAxis1.orient("top");
-			gXTop.call(xAxis1).selectAll("text")//
+			gXTop.call(xAxis1).selectAll("middle")//
 			.style("text-anchor", "start")//
 			.attr("dx", ".2em")//
 			.attr("dy", ".3em")//
@@ -369,7 +369,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var zoom = d3.behavior.zoom();
 		svg.call(zoom);
 
-		bus.send("gantt-created", [ svg ]);
+		bus.send("gantt-created", [ svg, width, height ]);
 	}
 
 	bus.listen("data-ready", refresh);

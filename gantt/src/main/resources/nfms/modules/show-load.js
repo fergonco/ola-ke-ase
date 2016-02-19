@@ -3,16 +3,44 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var NONE = 0, ROOT = 1, GROUPS = 2;
 
 	var mode = 0;
-	var timeDomain;
 	var xScale;
 	var yScale;
+	
+	var width;
+
+	var minimumStart = null;
+	var maximumEnd = null;
+
+	function getTimeDomain(task) {
+		var ret = task.getTimeDomain(0);
+		return [ Math.max(ret[0].getTime(), minimumStart), Math.min(ret[1].getTime(), maximumEnd) ];
+	}
+
+	function getStartMillis(task) {
+		var ret = task.getStartDate();
+		ret = Math.max(ret.getTime(), minimumStart);
+
+		return ret;
+	}
+
+	function getEndMillis(task) {
+		var ret = task.getEndDate();
+		ret = Math.min(ret.getTime(), maximumEnd);
+
+		return ret;
+	}
+
+	function getTreeTimeDomain() {
+		var ret = taskTree.getTimeDomain();
+		return [ Math.max(ret[0].getTime(), minimumStart), Math.min(ret[1].getTime(), maximumEnd) ];
+	}
 
 	function updateLoadSelection(loadSelection) {
 		var container = d3.select(".allscreen").node();
-		var timeDomain = taskTree.getTimeDomain();
+		var timeDomain = getTreeTimeDomain();
 		var xScale = taskTree.getXScale();
 		var yScale = taskTree.getYScale();
-		var dayWidthPixels = xScale(new Date(timeDomain[0].getTime() + utils.DAY_MILLIS)) - xScale(timeDomain[0]);
+		var dayWidthPixels = xScale(new Date(timeDomain[0] + utils.DAY_MILLIS)) - xScale(timeDomain[0]);
 		loadSelection.attr("class", "load")//
 		.attr("x", function(d, index) {
 			var task;
@@ -21,8 +49,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			} else {
 				task = taskTree.getTask(d.groupName);
 			}
-			var taskTimeDomain = task.getTimeDomain(0);
-			return xScale(taskTimeDomain[0].getTime() + d.groupIndex * utils.DAY_MILLIS);
+			var taskTimeDomain = getTimeDomain(task);
+			return xScale(taskTimeDomain[0] + d.groupIndex * utils.DAY_MILLIS);
 		})//
 		.attr("y", function(d) {
 			if (d.groupName == "root") {
@@ -53,12 +81,15 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			}
 		})//
 		.attr("title", function(d, index) {
-			return d.groupName + ":" + d.load + "h (" + new Date(timeDomain[0].getTime() + index * utils.DAY_MILLIS) + ")";
+			return d.groupName + ":" + d.load + "h (" + new Date(timeDomain[0] + index * utils.DAY_MILLIS) + ")";
 		});
 	}
 
 	function refresh() {
-		var timeDomain = taskTree.getTimeDomain();
+		var xScale = taskTree.getXScale();
+		minimumStart = xScale.invert(0).getTime();
+		maximumEnd = xScale.invert(width).getTime();
+
 		var groups = null;
 		if (mode == GROUPS) {
 			groups = taskTree.visitTasksIgnoreUserFilter(taskTree.ROOT, function(task) {
@@ -72,8 +103,8 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var loadData = [];
 		for (var i = 0; mode != NONE && i < groups.length; i++) {
 			var groupLoadData = [];
-			var groupTimeDomain = groups[i].getTimeDomain(0);
-			var dayCount = Math.round((groupTimeDomain[1].getTime() - groupTimeDomain[0].getTime()) / utils.DAY_MILLIS);
+			var groupTimeDomain = getTimeDomain(groups[i]);
+			var dayCount = Math.ceil((groupTimeDomain[1] - groupTimeDomain[0]) / utils.DAY_MILLIS);
 			for (var j = 0; j < dayCount; j++) {
 				groupLoadData.push({
 					groupName : groups[i].getTaskName(),
@@ -88,10 +119,10 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			});
 			for (var j = 0; j < tasks.length; j++) {
 				var task = tasks[j];
-				var start = Math.round(task.getStartDate().getTime() / utils.DAY_MILLIS) * utils.DAY_MILLIS;
-				var end = task.getEndDate();
-				for (var day = start; day < end.getTime(); day = day + utils.DAY_MILLIS) {
-					var index = Math.round((day - groupTimeDomain[0].getTime()) / utils.DAY_MILLIS);
+				var start = Math.round(getStartMillis(task) / utils.DAY_MILLIS) * utils.DAY_MILLIS;
+				var end = getEndMillis(task);
+				for (var day = start; day < end; day = day + utils.DAY_MILLIS) {
+					var index = Math.floor((day - groupTimeDomain[0]) / utils.DAY_MILLIS);
 					groupLoadData[index]["load"] += task.getDailyDuration();
 				}
 			}
@@ -105,7 +136,10 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		updateLoadSelection(loadSelection);
 	}
 
-	bus.listen("gantt-created", refresh);
+	bus.listen("gantt-created", function(e, svg, newWidth, height) {
+		width = newWidth;
+		refresh();
+	});
 
 	d3.select("body").append("div")//
 	.attr("class", "button")//
