@@ -223,7 +223,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		var groupTaskNames = [];
 		for (var i = 0; i < taskNames.length; i++) {
 			var task = taskTree.getTask(taskNames[i]);
-			if (task.isGroup() && !task.isFolded()) {
+			if (task.isGroup() && !task.isFolded() && !task.isArchived()) {
 				groupTaskNames.push(taskNames[i]);
 			}
 		}
@@ -242,7 +242,11 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var y1 = yScale(d);
 			var t = task;
 			while (t.isGroup() && !t.isFolded()) {
-				t = t.tasks[t.tasks.length - 1];
+				var last = t.tasks.length - 1;
+				while (t.tasks[last].isArchived()) {
+					last--;
+				}
+				t = t.tasks[last];
 			}
 			var y2 = yScale(t.taskName) + yScale.rangeBand();
 			return "M " + x + " " + y1 + " L " + x + " " + y2 + " L " + (x + 10) + " " + y2;
