@@ -72,7 +72,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			}
 			var done = utils.formatTime(time);
 			var estimated = utils.formatTime(taskTree.getTask(d).getEstimatedTime());
-			return d + ": " + done + "/" + estimated;
+			return d + ": " + done + " of " + estimated;
 		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
@@ -242,11 +242,12 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var y1 = yScale(d);
 			var t = task;
 			while (t.isGroup() && !t.isFolded()) {
-				var last = t.tasks.length - 1;
-				while (t.tasks[last].isArchived()) {
+				var children = t.getTasks();
+				var last = children.length - 1;
+				while (children[last].isArchived()) {
 					last--;
 				}
-				t = t.tasks[last];
+				t = children[last];
 			}
 			var y2 = yScale(t.taskName) + yScale.rangeBand();
 			return "M " + x + " " + y1 + " L " + x + " " + y2 + " L " + (x + 10) + " " + y2;

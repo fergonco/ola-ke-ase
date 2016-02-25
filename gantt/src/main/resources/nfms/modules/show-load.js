@@ -12,9 +12,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var maximumEnd = null;
 
 	function getTimeDomain(task) {
-		var ret = task.getTimeDomain(0, function(t) {
-			return !t.isArchived();
-		});
+		var ret = task.getTimeDomain(0, false);
 		if (ret == null) {
 			return [ minimumStart, maximumEnd ];
 		} else {

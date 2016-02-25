@@ -1,5 +1,7 @@
 define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
+	var CURRENT_VERSION = 1;
+
 	var nameIndicesMap = {};
 	var timeDomain = null;
 	var showArchived = false;
@@ -49,12 +51,18 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		return task.taskName;
 	};
 
-	var visitAllTasks = function(extractor) {
-		return visitTasksWithIndex(null, ROOT, [], function() {
-			return true;
-		}, function() {
-			return true;
-		}, extractor, true);
+	var decorateAllTasks = function(task, parent) {
+		decorateTask(parent, task);
+		if (task.hasOwnProperty("tasks")) {
+			for (var i = 0; i < task.tasks.length; i++) {
+				decorateAllTasks(task.tasks[i], task);
+			}
+		}
+		if (task.hasOwnProperty("archivedTasks")) {
+			for (var i = 0; i < task.archivedTasks.length; i++) {
+				decorateAllTasks(task.archivedTasks[i], task);
+			}
+		}
 	}
 
 	var visitTasks = function(task, filter, visitChildren, extractor) {
@@ -67,12 +75,13 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	var visitTasksWithIndex = function(parent, task, index, filter, visitChildren, extractor, overrideFilter) {
 		var ret = [];
-		if (filter(task) && (overrideFilter || ((showArchived || !task.isArchived()) && (userFilter == null || userFilter(task))))) {
+		if (filter(task) && (overrideFilter || userFilter == null || userFilter(task))) {
 			ret = ret.concat(extractor(task, index, parent));
 		}
 		if (task.hasOwnProperty("tasks") && visitChildren(task)) {
-			for (var i = 0; i < task.tasks.length; i++) {
-				ret = ret.concat(visitTasksWithIndex(task, task.tasks[i], index.concat([ i ]), filter, visitChildren, extractor,
+			var children = task.getTasks()
+			for (var i = 0; i < children.length; i++) {
+				ret = ret.concat(visitTasksWithIndex(task, children[i], index.concat([ i ]), filter, visitChildren, extractor,
 						overrideFilter));
 			}
 		}
@@ -84,7 +93,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var taskIndices = nameIndicesMap[taskName];
 		var ret = ROOT;
 		for (var i = 0; i < taskIndices.length; i++) {
-			ret = ret.tasks[taskIndices[i]];
+			ret = ret.getTasks()[taskIndices[i]];
 		}
 		return ret;
 	};
@@ -165,7 +174,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			return parent;
 		}
 		task["isGroup"] = function() {
-			return task.hasOwnProperty("tasks") && task.tasks.length > 0;
+			return (task.hasOwnProperty("tasks") && task.tasks.length > 0)
+					|| (task.hasOwnProperty("archivedTasks") && task.archivedTasks.length > 0);
 		}
 		task["isFolded"] = function() {
 			return task.hasOwnProperty("folded") && task.folded == true;
@@ -357,8 +367,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				}
 			}
 			if (task.isGroup()) {
-				for (var i = 0; i < task.tasks.length; i++) {
-					acum += task.tasks[i].getTimeRecordSum(min, max);
+				var children = task.getTasks(true);
+				for (var i = 0; i < children.length; i++) {
+					acum += children[i].getTimeRecordSum(min, max);
 				}
 
 			}
@@ -377,8 +388,9 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 				}
 				acum += numDays * task.getDailyDuration() * 60 * 60 * 1000;
 			} else {
-				for (var i = 0; i < task.tasks.length; i++) {
-					acum += task.tasks[i].getEstimatedTime();
+				var children = task.getTasks(true);
+				for (var i = 0; i < children.length; i++) {
+					acum += children[i].getEstimatedTime();
 				}
 			}
 
@@ -429,20 +441,16 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			setter(task, "content", newContent);
 		}
 		task["getPresentationTimeDomain"] = function() {
-			return task.getTimeDomain(utils.DAY_MILLIS / 3, function(task) {
-				return showArchived || !task.isArchived();
-			});
+			return task.getTimeDomain(utils.DAY_MILLIS / 3, showArchived);
 		}
-		task["getTimeDomain"] = function(groupMargin, filter) {
+		task["getTimeDomain"] = function(groupMargin, showArchived) {
 			var ret = null;
 			if (task.isGroup()) {
 				var min = null;
 				var max = null;
-				for (var i = 0; i < task.tasks.length; i++) {
-					if (filter && !filter(task.tasks[i])) {
-						continue;
-					}
-					var childTimeDomain = task.tasks[i].getTimeDomain(groupMargin, filter);
+				var children = task.getTasks(showArchived);
+				for (var i = 0; i < children.length; i++) {
+					var childTimeDomain = children[i].getTimeDomain(groupMargin, showArchived);
 					if (childTimeDomain != null) {
 						if (min == null || min > childTimeDomain[0]) {
 							min = childTimeDomain[0];
@@ -463,18 +471,53 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		task["isArchived"] = function() {
 			if (!task.isGroup()) {
-				return getter(task, "archived", false);
+				var parent = task.getParent();
+				return parent.hasOwnProperty("archivedTasks") && getTaskIndex(parent.archivedTasks, task) != null;
 			} else {
-				for (var i = 0; i < task.tasks.length; i++) {
-					if (!task.tasks[i].isArchived()) {
-						return false;
-					}
-				}
-				return true;
+				return task.tasks.length == 0 && task.hasOwnProperty("archivedTasks") && task.archivedTasks.length > 0;
 			}
 		}
 		task["setArchived"] = function(archived) {
-			setter(task, "archived", archived);
+			var parent = task.getParent();
+			var sourceArray = null;
+			var targetArray = null;
+			if (archived) {
+				if (!parent.hasOwnProperty("archivedTasks")) {
+					parent.archivedTasks = [];
+				}
+				sourceArray = parent.tasks;
+				targetArray = parent.archivedTasks;
+			} else {
+				if (!parent.hasOwnProperty("tasks")) {
+					parent.tasks = [];
+				}
+				sourceArray = parent.archivedTasks;
+				targetArray = parent.tasks;
+			}
+			var taskIndex = getTaskIndex(sourceArray, task);
+			sourceArray.splice(taskIndex, 1);
+			targetArray.push(task);
+
+			// Cascade upwards
+			if (archived && parent.tasks.length == 0) {
+				parent.setArchived(true);
+			}
+			if (!archived && parent.tasks.length == 1) {
+				parent.setArchived(false);
+			}
+			bus.send("dirty");
+		}
+		task["getTasks"] = function(includeArchived) {
+			if (typeof includeArchived === "undefined") {
+				includeArchived = showArchived;
+			}
+			var ret = [];
+			if (includeArchived && task.hasOwnProperty("archivedTasks")) {
+				ret = ret.concat(task.archivedTasks);
+			}
+			ret = ret.concat(task.tasks);
+
+			return ret;
 		}
 		var toHour = function(date) {
 			return date.getUTCHours() + date.getMinutes() / 60;
@@ -561,10 +604,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	}
 
 	bus.listen("refresh-tree", function(e) {
-		decorateTask(null, ROOT);
-		visitAllTasks(function(task, index, parent) {
-			decorateTask(parent, task);
-		});
+		decorateAllTasks(ROOT, null);
 		timeDomain = ROOT.getPresentationTimeDomain();
 		timeDomain[0] = new Date(utils.today.getTime() - 2 * utils.DAY_MILLIS);
 		timeDomain = [ new Date(timeDomain[0].getTime() + pan), new Date(timeDomain[1].getTime() + pan) ];
@@ -591,9 +631,17 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		bus.send("data-ready");
 	});
 
-	bus.listen("plan", function(e, plan) {
-		ROOT.tasks = plan;
+	function newPlan(plan) {
+		if (!plan.hasOwnProperty("version") || plan.version != CURRENT_VERSION) {
+			ROOT.tasks = plan;
+		} else {
+			ROOT.tasks = plan.tasks;
+		}
 		bus.send("set-scale", [ "week" ]);
+	}
+
+	bus.listen("plan", function(e, plan) {
+		newPlan(plan);
 	});
 
 	bus.listen("pan", function(e, millis) {
@@ -631,7 +679,10 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			type : 'POST',
 			url : 'plan',
 			contentType : "application/json",
-			data : JSON.stringify(ROOT.tasks),
+			data : JSON.stringify({
+				"version" : CURRENT_VERSION,
+				"tasks" : ROOT.tasks
+			}),
 			success : function(data, textStatus, jqXHR) {
 				bus.send("websocket-send-json", {
 					"type" : "saved"
@@ -647,9 +698,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 
 	bus.listen("websocket-receive", function(e, data) {
 		if (data["type"] == "saved") {
-			require([ "text!plan?a=" + new Date().getTime() ], function(newPlan) {
-				ROOT.tasks = JSON.parse(newPlan);
-				bus.send("refresh-tree");
+			require([ "text!plan?a=" + new Date().getTime() ], function(plan) {
+				newPlan(JSON.parse(plan));
 			});
 		}
 	});
