@@ -5,7 +5,7 @@ define([ "message-bus", "task-tree" ], function(bus, taskTree) {
 		taskTree.visitTasks(taskTree.ROOT, function(task) {
 			return task.getContent() != "";
 		}, taskTree.VISIT_UNFOLDED_CHILDREN, function(task) {
-			taskNames.push(task.taskName);
+			taskNames.push(task.getTaskName());
 		});
 		var selection = d3.select("#level4").selectAll(".taskContentIndicator")
 				.data(taskNames);

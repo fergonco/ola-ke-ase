@@ -18,9 +18,7 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 				.parse(taskSchema), taskTree.getTask(selectedTaskName));
 		generated.formAccepted(function(object) {
 			var task = taskTree.getTask(selectedTaskName);
-			if (!task.setTaskName(object["taskName"])) {
-				return false;
-			}
+			task.setLabel(object["label"]);
 			task.setDailyDuration(object["dailyDuration"]);
 			task.setImportance(object["importance"]);
 			task.setDedicationLowerLimit(object["dedicationLowerLimit"]);
@@ -33,7 +31,7 @@ define([ "message-bus", "task-tree", "ui-generator", "utils", "text!task-schema.
 			var task = taskTree.getTask(selectedTaskName);
 			input.remove();
 			bus.send("refresh-tree");
-			bus.send("select-task", [ task.taskName ]);
+			bus.send("select-task", [ task.getTaskName() ]);
 			bus.send("enable-keylistener");
 		});
 		generated.formClosedCancel(function() {

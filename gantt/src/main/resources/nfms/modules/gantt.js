@@ -64,15 +64,16 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var updateTask = function(selection) {
 		selection//
 		.attr("title", function(d) {
+			var task = taskTree.getTask(d);
 			var time = null;
 			if (timeFilter == null) {
-				time = taskTree.getTask(d).getTimeRecordSum();
+				time = task.getTimeRecordSum();
 			} else {
-				time = taskTree.getTask(d).getTimeRecordSum(timeFilter[0], timeFilter[1]);
+				time = task.getTimeRecordSum(timeFilter[0], timeFilter[1]);
 			}
 			var done = utils.formatTime(time);
-			var estimated = utils.formatTime(taskTree.getTask(d).getEstimatedTime());
-			return d + ": " + done + " of " + estimated;
+			var estimated = utils.formatTime(task.getEstimatedTime());
+			return task.getLabel() + ": " + done + " of " + estimated;
 		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
@@ -249,7 +250,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				}
 				t = children[last];
 			}
-			var y2 = yScale(t.taskName) + yScale.rangeBand();
+			var y2 = yScale(t.getTaskName()) + yScale.rangeBand();
 			return "M " + x + " " + y1 + " L " + x + " " + y2 + " L " + (x + 10) + " " + y2;
 		});
 
@@ -328,7 +329,10 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		// Axis
 		svg.selectAll(".axis").remove();
 
-		var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1);
+		var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1).tickFormat(function(d) {
+			var task = taskTree.getTask(d);
+			return task.getLabel();
+		});
 		svg.append("g").attr("class", "y axis").call(yAxis);
 
 		var each = 2 * utils.DAY_MILLIS;

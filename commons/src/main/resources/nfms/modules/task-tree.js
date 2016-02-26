@@ -1,4 +1,4 @@
-define([ "message-bus", "utils", "d3" ], function(bus, utils) {
+define([ "message-bus", "utils", "uid", "d3" ], function(bus, utils, uid) {
 
 	var CURRENT_VERSION = 1;
 
@@ -16,7 +16,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	var statusList;
 
 	var ROOT = {
-		"taskName" : "root",
+		"id" : 0,
+		"label" : "root",
 		"tasks" : null,
 		"dedicationUpperLimit" : 10
 	}
@@ -48,10 +49,15 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 	};
 
 	var NAME_EXTRACTOR = function(task) {
-		return task.taskName;
+		return task.getTaskName();
 	};
 
 	var decorateAllTasks = function(task, parent) {
+		if (!task.hasOwnProperty("id") || !task.hasOwnProperty("label")) {
+			task.label = task.taskName;
+			task.id = uid();
+			delete task["taskName"];
+		}
 		decorateTask(parent, task);
 		if (task.hasOwnProperty("tasks")) {
 			for (var i = 0; i < task.tasks.length; i++) {
@@ -98,26 +104,8 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		return ret;
 	};
 
-	var validName = function(name) {
-		for (var i = 0; i < taskNames.length; i++) {
-			if (taskNames[i] == name) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
 	var getNewName = function() {
-		var base = "new task";
-		var name = base;
-		var counter = 0;
-		while (!validName(name)) {
-			name = base + "-" + counter;
-			counter++
-		}
-
-		return name;
+		return "ola ke ase?";
 	}
 
 	var move = function(task, direction) {
@@ -156,7 +144,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		decorateTask(task, newTask);
 		task.tasks.splice(0, 0, newTask);
-		return newTask.taskName;
+		return newTask.getTaskName();
 	}
 	function getter(task, propertyName, defaultValue) {
 		if (task.hasOwnProperty(propertyName)) {
@@ -224,12 +212,13 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		}
 		task["createSibling"] = function(before) {
 			var newTask = {
-				taskName : getNewName()
+				id : uid(),
+				label : getNewName()
 			};
 			var index = -1;
 			var parentTask = task.getParent();
 			for (var i = 0; i < parentTask.tasks.length; i++) {
-				if (parentTask.tasks[i].taskName == task.taskName) {
+				if (parentTask.tasks[i].getTaskName() == task.getTaskName()) {
 					index = i;
 					break;
 				}
@@ -243,11 +232,12 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 			parentTask.tasks.splice(index, 0, newTask);
 			bus.send("dirty");
-			return newTask.taskName;
+			return newTask.getTaskName();
 		}
 		task["createChild"] = function() {
 			var newTask = {
-				taskName : getNewName()
+				id : uid(),
+				label : getNewName()
 			};
 			if (task.hasOwnProperty("status")) {
 				newTask["status"] = task.status;
@@ -274,16 +264,14 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 			}
 		}
 		task["getTaskName"] = function() {
-			return task.taskName;
+			return task.id;
 		}
-		task["setTaskName"] = function(name) {
-			if (validName(name)) {
-				task.taskName = name;
-				bus.send("dirty");
-				return true;
-			} else {
-				return name == task.taskName;
-			}
+		task["getLabel"] = function() {
+			return task.label;
+		}
+		task["setLabel"] = function(label) {
+			task.label = label;
+			bus.send("dirty");
 		}
 		task["moveUp"] = function() {
 			move(task, "up");
@@ -611,7 +599,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		var childrenFilter = userChildrenFilter != null ? VISIT_ALL_CHILDREN : VISIT_UNFOLDED_CHILDREN;
 		var taskFilter = userChildrenFilter != null ? FILTER_SINGLE_TASKS : FILTER_ALL;
 		visitTasks(ROOT, FILTER_ALL, VISIT_ALL_CHILDREN, function(task, index) {
-			nameIndicesMap[task.taskName] = index;
+			nameIndicesMap[task.getTaskName()] = index;
 		});
 		taskNames = visitTasks(ROOT, taskFilter, childrenFilter, NAME_EXTRACTOR);
 		addFolders(taskNames);

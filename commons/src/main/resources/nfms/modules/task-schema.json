@@ -3,8 +3,8 @@
 	"id" : "http://olakease.org/task-schema",
 	"type" : "object",
 	"properties" : {
-		"taskName" : {
-			"id" : "http://olakease.org/taskName",
+		"label" : {
+			"id" : "http://olakease.org/label",
 			"title" : "Name: ",
 			"type" : "string"
 		},
