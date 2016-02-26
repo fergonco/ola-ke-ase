@@ -62,8 +62,9 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			return yScale(task.getDayStart()) + 15;
 		}) //
 		.html(function(d) {
-			var ret = d;
-			var timeSum = taskTree.getTask(d).getTimeRecordSum();
+			var task = taskTree.getTask(d);
+			var ret = task.getLabel();
+			var timeSum = task.getTimeRecordSum();
 			if (timeSum > 0) {
 				ret += ": " + utils.formatTime(timeSum);
 			}
