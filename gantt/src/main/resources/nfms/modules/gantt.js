@@ -92,19 +92,23 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			return style;
 		}) //
 		.attr("class", "tasks") //
-		.attr("y", 0)//
-		.attr("transform", function(d) {
-			var dates = taskTree.getTask(d).getPresentationTimeDomain();
-			return "translate(" + xScale(dates[0]) + "," + yScale(d) + ")";
-		})//
-		.attr("height", function(d) {
-			return yScale.rangeBand();
-		})//
-		.attr("width", function(d) {
+		.attr("d", function(d) {
 			var task = taskTree.getTask(d);
 			var dates = task.getPresentationTimeDomain();
-			return (xScale(dates[1]) - xScale(dates[0]));
-		}).on("click", function(d) {
+			var ret = "M " + xScale(dates[0]) + " " + (yScale(d) + yScale.rangeBand());
+			for (var day = dates[0].getTime(); day < dates[1].getTime(); day = day + utils.DAY_MILLIS) {
+				var height = task.isGroup() || task.getDayDuration(day) > 0 ? 0 : yScale.rangeBand() - 1;
+				var durationY = yScale(d) + height;
+				var dayX = xScale(new Date(day));
+				var nextDayX = xScale(new Date(Math.min(day + utils.DAY_MILLIS, dates[1].getTime())));
+				ret += " L " + dayX + " " + durationY;
+				ret += " L " + nextDayX + " " + durationY;
+			}
+			ret += " L " + xScale(new Date(dates[1])) + " " + (yScale(d) + yScale.rangeBand());
+			ret += " L " + xScale(new Date(dates[0])) + " " + (yScale(d) + yScale.rangeBand()) + " Z";
+			return ret;
+		})//
+		.on("click", function(d) {
 			if (d3.event.defaultPrevented)
 				return; // click suppressed
 			var task = taskTree.getTask(d);
@@ -188,7 +192,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		// Tasks
 		var taskSelection = level3.selectAll(".tasks").data(taskNames);
 		taskSelection.exit().remove();
-		taskSelection.enter().append("rect");
+		taskSelection.enter().append("path");
 
 		updateTask(taskSelection);
 

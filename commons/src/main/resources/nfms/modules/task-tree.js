@@ -366,15 +366,12 @@ define([ "message-bus", "utils", "uid", "d3" ], function(bus, utils, uid) {
 		task["getEstimatedTime"] = function() {
 			var acum = 0;
 			if (!task.isGroup()) {
-				var numDays = 0;
 				var day = task.getStartDate().getTime();
 				while (day < task.getEndDate().getTime()) {
-					if (new Date(day).getUTCDay() > 0 && new Date(day).getUTCDay() < 6) {
-						numDays++;
-					}
+					var dayDuration = task.getDayDuration(day) * 60 * 60 * 1000;
+					acum += dayDuration;
 					day += utils.DAY_MILLIS;
 				}
-				acum += numDays * task.getDailyDuration() * 60 * 60 * 1000;
 			} else {
 				var children = task.getTasks(true);
 				for (var i = 0; i < children.length; i++) {
@@ -384,12 +381,23 @@ define([ "message-bus", "utils", "uid", "d3" ], function(bus, utils, uid) {
 
 			return acum;
 		}
+		task["getDayDuration"] = function(millis) {
+			if (task.hasOwnProperty("dailyDuration")) {
+				var dailyDuration = task["dailyDuration"].toString();
+				var components = dailyDuration.split(/[ ]+/);
+				if (components.length == 1) {
+					var duration = components[0];
+					components = [ duration, duration, duration, duration, duration, duration, duration ];
+				}
+				var day = new Date(millis).getUTCDay();
+				day = (day + 6) % 7;
+				return parseFloat(components[day]);
+			}
+			return task.isGroup() ? 0 : 5;
+		}
 		task["getDailyDuration"] = function() {
 			if (task.hasOwnProperty("dailyDuration")) {
-				var ret = parseFloat(task["dailyDuration"]);
-				if (ret > 0) {
-					return ret;
-				}
+				return task["dailyDuration"].toString();
 			}
 			return task.isGroup() ? 0 : 5;
 		}
@@ -525,17 +533,8 @@ define([ "message-bus", "utils", "uid", "d3" ], function(bus, utils, uid) {
 		task["setDayStart"] = function(dayStart) {
 			setter(task, "dayStart", dayStart);
 		}
-		task["getDayEnd"] = function() {
-			if (task.hasOwnProperty("dayEnd")) {
-				return task.dayEnd;
-			} else {
-				var taskLength = task.getEndDate().getTime() - task.getStartDate().getTime();
-				if (taskLength != utils.DAY_MILLIS) {
-					return toHour(task.getEndDate());
-				} else {
-					return task.getDayStart() + task.getDailyDuration();
-				}
-			}
+		task["getDayEnd"] = function(day) {
+			return task.getDayStart() + task.getDayDuration(day);
 		}
 		task["setDayEnd"] = function(dayEnd) {
 			setter(task, "dayEnd", dayEnd);

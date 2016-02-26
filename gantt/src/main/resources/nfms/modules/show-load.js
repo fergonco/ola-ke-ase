@@ -127,7 +127,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				var end = getEndMillis(task);
 				for (var day = start; day < end; day = day + utils.DAY_MILLIS) {
 					var index = Math.floor((day - groupTimeDomain[0]) / utils.DAY_MILLIS);
-					groupLoadData[index]["load"] += task.getDailyDuration();
+					groupLoadData[index]["load"] += task.getDayDuration(day);
 				}
 			}
 

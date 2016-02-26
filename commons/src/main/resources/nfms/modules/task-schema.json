@@ -10,8 +10,8 @@
 		},
 		"dailyDuration" : {
 			"id" : "http://olakease.org/dailyDuration",
-			"title" : "Duration: ",
-			"type" : "float"
+			"title" : "Duration pattern: ",
+			"type" : "string"
 		},
 		"importance" : {
 			"id" : "http://olakease.org/importance",

@@ -3,6 +3,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 	var taskNames;
 	var selectedTask;
 	var xScale, yScale;
+	var currentDay;
 
 	var getSelectedIndex = function() {
 		if (selectedTask != null) {
@@ -39,7 +40,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		})//
 		.attr("height", function(d) {
 			var task = taskTree.getTask(d);
-			var diff = yScale(task.getDayEnd()) - yScale(task.getDayStart());
+			var diff = yScale(task.getDayEnd(currentDay)) - yScale(task.getDayStart());
 			return diff + 2 * margin;
 		});
 	};
@@ -95,4 +96,7 @@ define([ "message-bus", "task-tree", "d3" ], function(bus, taskTree) {
 		updateSelection();
 	});
 
+	bus.listen("day-set", function(e, start, end) {
+		currentDay = start;
+	});
 });
