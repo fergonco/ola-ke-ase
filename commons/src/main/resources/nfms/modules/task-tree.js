@@ -637,11 +637,11 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		} else {
 			ROOT.tasks = plan.tasks;
 		}
-		bus.send("set-scale", [ "week" ]);
 	}
 
 	bus.listen("plan", function(e, plan) {
 		newPlan(plan);
+		bus.send("set-scale", [ "week" ]);
 	});
 
 	bus.listen("pan", function(e, millis) {
@@ -700,6 +700,7 @@ define([ "message-bus", "utils", "d3" ], function(bus, utils) {
 		if (data["type"] == "saved") {
 			require([ "text!plan?a=" + new Date().getTime() ], function(plan) {
 				newPlan(JSON.parse(plan));
+				bus.send("refresh-tree");
 			});
 		}
 	});
