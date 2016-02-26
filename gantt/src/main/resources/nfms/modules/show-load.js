@@ -48,7 +48,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		loadSelection.attr("class", "load")//
 		.attr("x", function(d, index) {
 			var task;
-			if (d.groupName == "root") {
+			if (d.groupName == taskTree.ROOT.getTaskName()) {
 				task = taskTree.ROOT;
 			} else {
 				task = taskTree.getTask(d.groupName);
@@ -57,7 +57,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			return xScale(taskTimeDomain[0] + d.groupIndex * utils.DAY_MILLIS);
 		})//
 		.attr("y", function(d) {
-			if (d.groupName == "root") {
+			if (d.groupName == taskTree.ROOT.getTaskName()) {
 				return 0;
 			} else {
 				return yScale(d.groupName);
@@ -68,7 +68,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		.style("stroke", "black")//
 		.style("fill", function(d) {
 			var task;
-			if (d.groupName == "root") {
+			if (d.groupName == taskTree.ROOT.getTaskName()) {
 				task = taskTree.ROOT;
 			} else {
 				task = taskTree.getTask(d.groupName);
@@ -85,7 +85,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			}
 		})//
 		.attr("title", function(d, index) {
-			return d.groupName + ":" + d.load + "h (" + new Date(timeDomain[0] + index * utils.DAY_MILLIS) + ")";
+			return d.label + ":" + d.load + "h (" + new Date(timeDomain[0] + index * utils.DAY_MILLIS) + ")";
 		});
 	}
 
@@ -113,6 +113,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				groupLoadData.push({
 					groupName : groups[i].getTaskName(),
 					groupIndex : j,
+					label : groups[i].getLabel(),
 					load : 0
 				});
 			}
