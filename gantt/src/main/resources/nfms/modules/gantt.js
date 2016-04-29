@@ -64,15 +64,16 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 	var updateTask = function(selection) {
 		selection//
 		.attr("title", function(d) {
+			var task = taskTree.getTask(d);
 			var time = null;
 			if (timeFilter == null) {
-				time = taskTree.getTask(d).getTimeRecordSum();
+				time = task.getTimeRecordSum();
 			} else {
-				time = taskTree.getTask(d).getTimeRecordSum(timeFilter[0], timeFilter[1]);
+				time = task.getTimeRecordSum(timeFilter[0], timeFilter[1]);
 			}
 			var done = utils.formatTime(time);
-			var estimated = utils.formatTime(taskTree.getTask(d).getEstimatedTime());
-			return d + ": " + done + "/" + estimated;
+			var estimated = utils.formatTime(task.getEstimatedTime());
+			return task.getLabel() + ": " + done + " of " + estimated;
 		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
@@ -91,19 +92,23 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			return style;
 		}) //
 		.attr("class", "tasks") //
-		.attr("y", 0)//
-		.attr("transform", function(d) {
-			var dates = taskTree.getTask(d).getPresentationTimeDomain();
-			return "translate(" + xScale(dates[0]) + "," + yScale(d) + ")";
-		})//
-		.attr("height", function(d) {
-			return yScale.rangeBand();
-		})//
-		.attr("width", function(d) {
+		.attr("d", function(d) {
 			var task = taskTree.getTask(d);
 			var dates = task.getPresentationTimeDomain();
-			return (xScale(dates[1]) - xScale(dates[0]));
-		}).on("click", function(d) {
+			var ret = "M " + xScale(dates[0]) + " " + (yScale(d) + yScale.rangeBand());
+			for (var day = dates[0].getTime(); day < dates[1].getTime(); day = day + utils.DAY_MILLIS) {
+				var height = task.isGroup() || task.getDayDuration(day) > 0 ? 0 : yScale.rangeBand() - 1;
+				var durationY = yScale(d) + height;
+				var dayX = xScale(new Date(day));
+				var nextDayX = xScale(new Date(Math.min(day + utils.DAY_MILLIS, dates[1].getTime())));
+				ret += " L " + dayX + " " + durationY;
+				ret += " L " + nextDayX + " " + durationY;
+			}
+			ret += " L " + xScale(new Date(dates[1])) + " " + (yScale(d) + yScale.rangeBand());
+			ret += " L " + xScale(new Date(dates[0])) + " " + (yScale(d) + yScale.rangeBand()) + " Z";
+			return ret;
+		})//
+		.on("click", function(d) {
 			if (d3.event.defaultPrevented)
 				return; // click suppressed
 			var task = taskTree.getTask(d);
@@ -187,7 +192,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		// Tasks
 		var taskSelection = level3.selectAll(".tasks").data(taskNames);
 		taskSelection.exit().remove();
-		taskSelection.enter().append("rect");
+		taskSelection.enter().append("path");
 
 		updateTask(taskSelection);
 
@@ -242,13 +247,14 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 			var y1 = yScale(d);
 			var t = task;
 			while (t.isGroup() && !t.isFolded()) {
-				var last = t.tasks.length - 1;
-				while (t.tasks[last].isArchived()) {
+				var children = t.getTasks();
+				var last = children.length - 1;
+				while (children[last].isArchived()) {
 					last--;
 				}
-				t = t.tasks[last];
+				t = children[last];
 			}
-			var y2 = yScale(t.taskName) + yScale.rangeBand();
+			var y2 = yScale(t.getTaskName()) + yScale.rangeBand();
 			return "M " + x + " " + y1 + " L " + x + " " + y2 + " L " + (x + 10) + " " + y2;
 		});
 
@@ -327,7 +333,10 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 		// Axis
 		svg.selectAll(".axis").remove();
 
-		var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1);
+		var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1).tickFormat(function(d) {
+			var task = taskTree.getTask(d);
+			return task.getLabel();
+		});
 		svg.append("g").attr("class", "y axis").call(yAxis);
 
 		var each = 2 * utils.DAY_MILLIS;

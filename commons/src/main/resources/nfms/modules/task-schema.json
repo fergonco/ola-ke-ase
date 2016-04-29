@@ -3,15 +3,15 @@
 	"id" : "http://olakease.org/task-schema",
 	"type" : "object",
 	"properties" : {
-		"taskName" : {
-			"id" : "http://olakease.org/taskName",
+		"label" : {
+			"id" : "http://olakease.org/label",
 			"title" : "Name: ",
 			"type" : "string"
 		},
 		"dailyDuration" : {
 			"id" : "http://olakease.org/dailyDuration",
-			"title" : "Duration: ",
-			"type" : "float"
+			"title" : "Duration pattern: ",
+			"type" : "string"
 		},
 		"importance" : {
 			"id" : "http://olakease.org/importance",

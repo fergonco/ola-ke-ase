@@ -8,7 +8,10 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		var intervalFilter = timeIntervalFilter.createTimeIntervalFilter(function() {
 			return interval;
 		});
-		var taskNames = taskTree.visitTasks(taskTree.ROOT, intervalFilter, taskTree.VISIT_ALL_CHILDREN, taskTree.NAME_EXTRACTOR);
+		var durationFilter = function(task) {
+			return intervalFilter(task) && task.getDayDuration(interval[0]) > 0;
+		}
+		var taskNames = taskTree.visitTasks(taskTree.ROOT, durationFilter, taskTree.VISIT_ALL_CHILDREN, taskTree.NAME_EXTRACTOR);
 		return taskNames;
 	}
 
@@ -40,7 +43,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 		})//
 		.attr("height", function(d) {
 			var task = taskTree.getTask(d);
-			return yScale(task.getDayEnd()) - yScale(task.getDayStart());
+			return yScale(task.getDayEnd(interval[0])) - yScale(task.getDayStart());
 		}).classed("finished", function(d) {
 			var task = taskTree.getTask(d);
 			return task.isDayFinished(interval[0]);
@@ -62,8 +65,9 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 			return yScale(task.getDayStart()) + 15;
 		}) //
 		.html(function(d) {
-			var ret = d;
-			var timeSum = taskTree.getTask(d).getTimeRecordSum();
+			var task = taskTree.getTask(d);
+			var ret = task.getLabel();
+			var timeSum = task.getTimeRecordSum();
 			if (timeSum > 0) {
 				ret += ": " + utils.formatTime(timeSum);
 			}
@@ -96,13 +100,13 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 
 		var refresh = function() {
 			xScale = d3.scale.linear().domain([ 0, 100 ]).range([ 0, width ]);
-			yScale = d3.scale.linear().domain([ 0, 24 ]).range([ 0, height ]);
+			yScale = d3.scale.linear().domain([ 0, 23.99 ]).range([ 0, height - 100 ]);
 			bus.send("new-scales", [ xScale, yScale ]);
 			var yAxis = d3.svg.axis().scale(yScale).orient("left").tickSize(1);
 			d3.select(".y").call(yAxis).selectAll("text")//
 			.attr("dy", "1.5em");
 
-			var hours = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 ];
+			var hours = [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23 ];
 			var hoursSelection = svg.selectAll(".hours").data(hours).enter()//
 			.append("rect")//
 			.attr("class", "hours")//
@@ -144,26 +148,27 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 				dy = 0;
 				sourceY = yScale(task.getDayStart());
 				setter = function(value) {
-					if (value >= 0 && value + task.getDayEnd() - task.getDayStart() <= 24) {
-						task.setDayEnd(value + task.getDayEnd() - task.getDayStart());
+					if (value >= 0 && value + task.getDayEnd(interval[0]) - task.getDayStart() <= 24) {
+						// task.setDayEnd(value + task.getDayEnd(interval[0]) -
+						// task.getDayStart());
 						task.setDayStart(value);
 					}
 				};
 				if (d3.event.sourceEvent.shiftKey) {
 					var mouseY = d3.mouse(this)[1];
 					var startDistance = Math.abs(mouseY - yScale(task.getDayStart()));
-					var endDistance = Math.abs(mouseY - yScale(task.getDayEnd()));
+					var endDistance = Math.abs(mouseY - yScale(task.getDayEnd(interval[0])));
 					if (startDistance < endDistance) {
 						setter = function(value) {
-							if (value < task.getDayEnd()) {
+							if (value < task.getDayEnd(interval[0])) {
 								task.setDayStart(value);
 							}
 						};
 					} else {
-						sourceY = yScale(task.getDayEnd());
+						sourceY = yScale(task.getDayEnd(interval[0]));
 						setter = function(value) {
 							if (value > task.getDayStart()) {
-								task.setDayEnd(value);
+								// task.setDayEnd(value);
 							}
 						};
 					}
@@ -228,6 +233,7 @@ define([ "message-bus", "task-tree", "utils", "time-interval-filter", "d3" ], fu
 
 	bus.listen("data-ready", function() {
 		refreshBoth();
+		bus.send("day-set", interval);
 	});
 
 	bus.listen("refresh-task", function(e, taskName) {
