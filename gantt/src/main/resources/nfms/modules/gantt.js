@@ -63,18 +63,6 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 
 	var updateTask = function(selection) {
 		selection//
-		.attr("title", function(d) {
-			var task = taskTree.getTask(d);
-			var time = null;
-			if (timeFilter == null) {
-				time = task.getTimeRecordSum();
-			} else {
-				time = task.getTimeRecordSum(timeFilter[0], timeFilter[1]);
-			}
-			var done = utils.formatTime(time);
-			var estimated = utils.formatTime(task.getEstimatedTime());
-			return task.getLabel() + ": " + done + " of " + estimated;
-		})//
 		.attr("style", function(d) {
 			var task = taskTree.getTask(d);
 			var style = "";
@@ -127,6 +115,18 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 					}
 				}
 			}
+		})//
+		.append("title").text(function(d) {
+			var task = taskTree.getTask(d);
+			var time = null;
+			if (timeFilter == null) {
+				time = task.getTimeRecordSum();
+			} else {
+				time = task.getTimeRecordSum(timeFilter[0], timeFilter[1]);
+			}
+			var done = utils.formatTime(time);
+			var estimated = utils.formatTime(task.getEstimatedTime());
+			return task.getLabel() + ": " + done + " of " + estimated;
 		});
 	};
 

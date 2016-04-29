@@ -84,7 +84,7 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 				return "white";
 			}
 		})//
-		.attr("title", function(d, index) {
+		.append("title").text(function(d, index) {
 			return d.label + ":" + d.load + "h (" + new Date(timeDomain[0] + index * utils.DAY_MILLIS) + ")";
 		});
 	}
