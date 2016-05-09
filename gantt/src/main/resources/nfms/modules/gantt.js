@@ -115,8 +115,9 @@ define([ "utils", "message-bus", "task-tree", "d3" ], function(utils, bus, taskT
 					}
 				}
 			}
-		})//
-		.append("title").text(function(d) {
+		});
+		selection.selectAll("title").remove();
+		selection.append("title").text(function(d) {
 			var task = taskTree.getTask(d);
 			var time = null;
 			if (timeFilter == null) {
